@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using AmongUs.GameOptions;
+//using Il2CppSystem.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityEngine.Bindings;
 
 namespace TOHE;
 
@@ -194,4 +197,65 @@ public static class DevManager
     }
     public static bool IsDevUser(this string code) => DevUserList.Any(x => x.Code == code);
     public static DevUser GetDevUser(this string code) => code.IsDevUser() ? DevUserList.Find(x => x.Code == code) : DefaultDevUser;
+    public static void DevAssignRole(byte playerId, CustomRoles role, bool shouldNotify, bool isUp)
+    {
+        //if (CustomRolesHelper.IsAdditionRole(rl) || rl is CustomRoles.GM) devMark = "";
+        //if (rl.GetCount() < 1 || rl.GetMode() == 0) devMark = "";
+        //if (isUp)
+        //{
+        //    if (devMark == "▲") Utils.SendMessage(string.Format(GetString("Message.YTPlanSelected"), roleName), playerId);
+        //    else Utils.SendMessage(string.Format(GetString("Message.YTPlanSelectFailed"), roleName), playerId);
+        //}
+        //if (devMark == "▲")
+        //{
+        //    byte pid = playerId == 255 ? (byte)0 : playerId;
+        //    Main.DevRole.Remove(pid);
+        //    Main.DevRole.Add(pid, rl);
+        //}
+        //if (isUp) return;
+        if (role.GetCount() < 1 || role.GetMode() == 0)
+        {
+            if (shouldNotify)
+            {
+                //send message here
+            }
+            return;
+        }
+        byte pid = playerId == 255 ? (byte)0 : playerId;
+        if (!role.IsAdditionRole())
+        {
+            Main.DevRole.Remove(pid);
+            Main.DevRole.Add(pid, role);
+            if (shouldNotify)
+            {
+                //send message here
+            }
+            return;
+        }
+        else
+        {
+            if (!Main.DevRole.ContainsKey(pid))
+            {
+                if (shouldNotify)
+                {
+                    //send message here
+                }
+                return;
+            }
+
+            //I wanted to check addon conflicts here but idk how 2 do that using checkAddonConflicts(role,pc)
+            Main.DevSubRoles[pid].Add(role);
+        }
+    }
+    public static bool isDevAddon(CustomRoles role)
+    {
+        foreach (var pid in Main.DevSubRoles)
+        {
+            if (pid.Value.Contains(role))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -15,6 +15,8 @@ using static TOHE.Modules.CustomRoleSelector;
 using static TOHE.Translator;
 using TOHE.Roles.Double;
 using TOHE.Modules.ChatManager;
+//using Il2CppSystem.Collections.Generic; //Lmao this is bugging my codes
+using UnityEngine.Bindings;
 
 namespace TOHE;
 
@@ -471,7 +473,7 @@ internal class SelectRolesPatch
             if (CustomRoles.Lovers.IsEnable() && (CustomRoles.FFF.IsEnable() ? -1 : rd.Next(1, 100)) <= Options.LoverSpawnChances.GetInt()) AssignLoversRolesFromList();
             foreach (var role in AddonRolesList)
             {
-                if (rd.Next(1, 100) <= (Options.CustomAdtRoleSpawnRate.TryGetValue(role, out var sc) ? sc.GetFloat() : 0))
+                if (rd.Next(1, 100) <= (Options.CustomAdtRoleSpawnRate.TryGetValue(role, out var sc) ? sc.GetFloat() : 0) || DevManager.isDevAddon(role))
                     if (role.IsEnable()) AssignSubRoles(role);
             }
 
@@ -1128,11 +1130,30 @@ internal class SelectRolesPatch
         }
         RPC.SyncLoversPlayers();
     }
-    private static void AssignSubRoles(CustomRoles role, int RawCount = -1)
+    private static void AssignSubRoles(CustomRoles role, int RawCount = -1 ,bool isDevAddon = false)
     {
         var allPlayers = Main.AllAlivePlayerControls.Where(x => CustomRolesHelper.CheckAddonConfilct(role, x)).ToList();
         var count = Math.Clamp(RawCount, 0, allPlayers.Count);
         if (RawCount == -1) count = Math.Clamp(role.GetCount(), 0, allPlayers.Count);
+
+        if (isDevAddon)
+        {
+            int dcount = 0;
+            foreach (var pid in Main.DevSubRoles)
+            {
+                if (pid.Value.Contains(role))
+                {
+                    dcount++;
+                }
+            }
+            if (dcount < 1) goto normalSubRegister;
+            count -= dcount; //count < 0 works for normal register LOL
+
+            Main.DevSubRoles.Where(x => x.Value.Contains(role))
+                .Do(x => Main.PlayerStates[x.Key].SetSubRole(role));
+        }
+
+    normalSubRegister:
         if (count <= 0) return;
         for (var i = 0; i < count; i++)
         {

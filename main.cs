@@ -222,6 +222,7 @@ public class Main : BasePlugin
     public static bool SwapSend;
 
     public static Dictionary<byte, CustomRoles> DevRole = new();
+    public static Dictionary<byte, List<CustomRoles>> DevSubRoles = new();
     public static List<byte> GodfatherTarget = new();
     public static Dictionary<byte, int> CrewpostorTasksDone = new();
     public static Dictionary<byte, List<string>> AwareInteracted = new();
