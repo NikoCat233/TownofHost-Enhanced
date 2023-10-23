@@ -58,7 +58,7 @@ internal class ChatCommands
         if (Mediumshiper.MsMsg(PlayerControl.LocalPlayer, text)) goto Canceled;
         if (MafiaRevengeManager.MafiaMsgCheck(PlayerControl.LocalPlayer, text)) goto Canceled;
         if (RetributionistRevengeManager.RetributionistMsgCheck(PlayerControl.LocalPlayer, text)) goto Canceled;
-        if (Swapper.SwapMsg(PlayerControl.LocalPlayer, text)) goto Canceled; 
+        if (Swapper.SwapMsg(PlayerControl.LocalPlayer, text)) goto Canceled;
         Directory.CreateDirectory(modTagsFiles);
         Directory.CreateDirectory(vipTagsFiles);
         Directory.CreateDirectory(sponsorTagsFiles);
@@ -217,7 +217,7 @@ internal class ChatCommands
                 case "/up":
                     canceled = true;
                     subArgs = text.Remove(0, 3);
-                    if (!PlayerControl.LocalPlayer.FriendCode.GetDevUser().IsUp) break;
+                    //if (!PlayerControl.LocalPlayer.FriendCode.GetDevUser().IsUp) break;
                     if (!Options.EnableUpMode.GetBool())
                     {
                         Utils.SendMessage(string.Format(GetString("Message.YTPlanDisabled"), GetString("EnableYTPlan")), PlayerControl.LocalPlayer.PlayerId);
@@ -711,7 +711,7 @@ internal class ChatCommands
                         Utils.SendMessage(GetString("RpsCommandInfo"), PlayerControl.LocalPlayer.PlayerId);
                         break;
                     }
-                    
+
                     if (subArgs == "" || !int.TryParse(subArgs, out int playerChoice))
                     {
                         Utils.SendMessage(GetString("RpsCommandInfo"), PlayerControl.LocalPlayer.PlayerId);
@@ -751,12 +751,12 @@ internal class ChatCommands
                         Utils.SendMessage(GetString("CoinFlipCommandInfo"), PlayerControl.LocalPlayer.PlayerId);
                         break;
                     }
-                    else  
+                    else
                     {
                         var rand = IRandom.Instance;
                         int botChoice = rand.Next(1, 101);
                         var coinSide = (botChoice < 51) ? GetString("Heads") : GetString("Tails");
-                        Utils.SendMessage(String.Format(GetString("CoinFlipResult"),coinSide), PlayerControl.LocalPlayer.PlayerId);
+                        Utils.SendMessage(String.Format(GetString("CoinFlipResult"), coinSide), PlayerControl.LocalPlayer.PlayerId);
                         break;
                     }
                 case "/gno":
@@ -794,7 +794,7 @@ internal class ChatCommands
                             //targetNumber = Main.GuessNumber[PlayerControl.LocalPlayer.PlayerId][0];
                             Utils.SendMessage(String.Format(GetString("GNoLost"), targetNumber), PlayerControl.LocalPlayer.PlayerId);
                             break;
-                        }                        
+                        }
                         else if (guessedNo < targetNumber)
                         {
                             Utils.SendMessage(String.Format(GetString("GNoLow"), Main.GuessNumber[PlayerControl.LocalPlayer.PlayerId][1]), PlayerControl.LocalPlayer.PlayerId);
@@ -868,18 +868,18 @@ internal class ChatCommands
             "擺爛人" or "摆烂" => GetString("Needy"),
             "獨裁者" or "独裁" => GetString("Dictator"),
             "法醫" or "法医" => GetString("Doctor"),
-            "偵探" or "侦探"=> GetString("Detective"),
+            "偵探" or "侦探" => GetString("Detective"),
             "幸運兒" or "幸运" => GetString("Luckey"),
             "大明星" or "明星" => GetString("SuperStar"),
-            "網紅" or "网红"=> GetString("CyberStar"),
-            "俠客" or "侠客"=> GetString("SwordsMan"),
+            "網紅" or "网红" => GetString("CyberStar"),
+            "俠客" or "侠客" => GetString("SwordsMan"),
             "正義賭怪" or "正义的赌怪" or "好赌" or "正义赌" => GetString("NiceGuesser"),
             "邪惡賭怪" or "邪恶的赌怪" or "坏赌" or "恶赌" or "邪恶赌" => GetString("EvilGuesser"),
             "市長" or "市长" => GetString("Mayor"),
             "被害妄想症" or "被害妄想" or "被迫害妄想症" or "被害" or "妄想" or "妄想症" => GetString("Paranoia"),
             "愚者" or "愚" => GetString("Psychic"),
             "修理大师" or "修理" or "维修" => GetString("SabotageMaster"),
-            "警長" or "警长"=> GetString("Sheriff"),
+            "警長" or "警长" => GetString("Sheriff"),
             "告密者" or "告密" => GetString("Snitch"),
             "增速者" or "增速" => GetString("SpeedBooster"),
             "時間操控者" or "时间操控人" or "时间操控" => GetString("TimeManager"),
@@ -896,33 +896,33 @@ internal class ChatCommands
             "情人" or "愛人" or "链子" or "老婆" or "老公" => GetString("Lovers"),
             "絕境者" or "绝境" => GetString("LastImpostor"),
             "閃電俠" or "闪电" => GetString("Flashman"),
-            "靈媒" or "灵媒"=> GetString("Seer"),
+            "靈媒" or "灵媒" => GetString("Seer"),
             "破平者" or "破平" => GetString("Brakar"),
-            "火炬" or "火炬"=> GetString("Torch"),
+            "火炬" or "火炬" => GetString("Torch"),
             "膽小" or "胆小" => GetString("Oblivious"),
             "迷惑者" or "迷幻" => GetString("Bewilder"),
             //"患者" or "患者"=> GetString("Sunglasses"),
             "蠢蛋" or "蠢狗" or "傻逼" => GetString("Fool"),
             "冤罪師" or "冤罪" => GetString("Innocent"),
             "資本家" or "资本主义" or "资本" => GetString("Capitalism"),
-            "老兵" or "老兵"=> GetString("Veteran"),
+            "老兵" or "老兵" => GetString("Veteran"),
             "加班狂" or "加班" => GetString("Workhorse"),
             "復仇者" or "复仇" => GetString("Avanger"),
-            "鵜鶘" or "鹈鹕"=> GetString("Pelican"),
-            "保鏢" or "保镖"=> GetString("Bodyguard"),
+            "鵜鶘" or "鹈鹕" => GetString("Pelican"),
+            "保鏢" or "保镖" => GetString("Bodyguard"),
             "up" or "up主" => GetString("Youtuber"),
             "利己主義者" or "利己主义" or "利己" => GetString("Egoist"),
             "贗品商" or "赝品" => GetString("Counterfeiter"),
             "擲雷兵" or "掷雷" or "闪光弹" => GetString("Grenadier"),
             "竊票者" or "偷票" or "偷票者" or "窃票师" or "窃票" => GetString("TicketsStealer"),
-            "教父" or "教父"=> GetString("Godfather"),
+            "教父" or "教父" => GetString("Godfather"),
             "革命家" or "革命" => GetString("Revolutionist"),
             "fff團" or "fff" or "fff团" => GetString("FFF"),
             "清理工" or "清潔工" or "清洁工" or "清理" or "清洁" => GetString("Cleaner"),
-            "醫生" or "医生"=> GetString("Medicaler"),
+            "醫生" or "医生" => GetString("Medicaler"),
             "调查员" or "调查" => GetString("Divinator"),
             "雙重人格" or "双重" or "双人格" or "人格" => GetString("DualPersonality"),
-            "玩家" or "玩家"=> GetString("Gamer"),
+            "玩家" or "玩家" => GetString("Gamer"),
             "情報販子" or "情报" or "贩子" => GetString("Messenger"),
             "球狀閃電" or "球闪" or "球状" => GetString("BallLightning"),
             "潛藏者" or "潜藏" => GetString("DarkHide"),
@@ -945,95 +945,95 @@ internal class ChatCommands
             "通靈師" or "通灵" => GetString("Mediumshiper"),
             "吟游詩人" or "诗人" => GetString("Bard"),
             "隱匿者" or "隐匿" or "隐身" or "隐身人" or "印尼" => GetString("Swooper"),
-            "船鬼" or "船鬼"=> GetString("Crewpostor"),
+            "船鬼" or "船鬼" => GetString("Crewpostor"),
             "嗜血騎士" or "血骑" or "骑士" or "bk" => GetString("BloodKnight"),
-            "賭徒" or "赌徒"=> GetString("Totocalcio"),
-            "分散机" or "分散机"=> GetString("Disperser"),
+            "賭徒" or "赌徒" => GetString("Totocalcio"),
+            "分散机" or "分散机" => GetString("Disperser"),
             "和平之鸽" or "和平之鴿" or "和平的鸽子" or "和平" => GetString("DovesOfNeace"),
             "持槍" or "持械" or "手长" => GetString("Reach"),
-            "君主" or "君主"=> GetString("Monarch"),
-            "野人" or "野人"=> GetString("Wildling"),
-            "騙術師" or "骗术师"=> GetString("Trickster"),
-            "衛道士" or "卫道士"=> GetString("Vindicator"),
-            "寄生蟲" or "寄生虫"=> GetString("Parasite"),
-            "抑鬱者" or "抑郁者"=> GetString("Inhibitor"),
-            "破壞者" or "破坏者"=> GetString("Saboteur"),
-            "議員" or "议员"=> GetString("Councillor"),
-            "眩暈者" or "眩晕者"=> GetString("Dazzler"),
-            "被清洗的" or "被清洗的"=> GetString("Cleansed"),
-            "死亡契約" or "死亡契约"=> GetString("Deathpact"),
-            "吞噬者" or "吞噬者"=> GetString("Devourer"),
-            "軍師" or "军师"=> GetString("EvilDiviner"),
-            "化形者" or "化形者"=> GetString("Morphling"),
-            "龍捲風" or "龙卷风"=> GetString("Twister"),
-            "潜伏者" or "潜伏者"=> GetString("Lurker"),
-            "罪犯" or "罪犯"=> GetString("Convict"),
-            "幻想家" or "幻想家"=> GetString("Visionary"),
-            "逃亡者" or "逃亡者"=> GetString("Refugee"),
-            "失敗者" or "失败者"=> GetString("Underdog"),
-            "速度者" or "速度者"=> GetString("Ludopath"),
-            "天文學家" or "天文学家"=> GetString("Chronomancer"),
-            "設陷者" or "设陷者"=> GetString("Pitfall"),
-            "狂戰士" or "狂战士"=> GetString("Berserker"),
-            "預言家" or "预言家"=> GetString("Farseer"),
-            "驗屍官" or "验尸官"=> GetString("Bloodhound"),
-            "正義追踪者" or "正义追踪者"=> GetString("Tracker"),
-            "商人" or "商人"=> GetString("Merchant"),
-            "懲罰者" or "惩罚者"=> GetString("Retributionist"),
-            "捕快" or "捕快"=> GetString("Deputy"),
-            "守護者" or "守护者"=> GetString("Guardian"),
-            "癮君子" or "瘾君子"=> GetString("Addict"),
-            "尋迹者" or "寻迹者"=> GetString("Tracefinder"),
-            "神谕"=> GetString("Oracle"),
-            "灵魂论者"=> GetString("Spiritualist"),
-            "变色龙"=> GetString("Chameleon"),
-            "检查员"=> GetString("ParityCop"),
-            "仰慕者"=> GetString("Admirer"),
-            "时间之主"=> GetString("TimeMaster"),
-            "十字军"=> GetString("Crusader"),
-            "遐想者"=> GetString("Reverie"),
-            "瞭望员"=> GetString("Lookout"),
-            "通信员" or "通讯员"=> GetString("Monitor"),
-            "执灯人"=> GetString("Lighter"),
-            "任务管理者"=> GetString("TaskManager"),
-            "目击者"=> GetString("Witness"),
-            "连环杀手"=> GetString("NSerialKiller"),
-            "天启"=> GetString("Juggernaut"),
-            "感染者"=> GetString("Infectious"),
-            "病毒"=> GetString("Virus"),
-            "追击者"=> GetString("Pursuer"),
-            "幻影"=> GetString("Phantom"),
-            "决斗者"=> GetString("Pirate"),
-            "煽动者"=> GetString("Agitater"),
-            "独行者"=> GetString("Maverick"),
-            "被诅咒的灵魂"=> GetString("CursedSoul"),
-            "小偷"=> GetString("Pickpocket"),
-            "背叛者"=> GetString("Traitor"),
-            "秃鹫"=> GetString("Vulture"),
-            "美杜莎"=> GetString("Medusa"),
-            "面包师"=> GetString("Baker"),
-            "饥荒"=> GetString("Famine"),
-            "灵魂召唤者"=> GetString("Spiritcaller"),
-            "失忆者"=> GetString("Amnesiac"),
-            "受虐狂"=> GetString("Masochist"),
-            "末日赌怪"=> GetString("Doomsayer"),
-            "裹尸布"=> GetString("Shroud"),
-            "狼人"=> GetString("Werewolf"),
-            "萨满"=> GetString("Shaman"),
-            "探索者"=> GetString("Seeker"),
+            "君主" or "君主" => GetString("Monarch"),
+            "野人" or "野人" => GetString("Wildling"),
+            "騙術師" or "骗术师" => GetString("Trickster"),
+            "衛道士" or "卫道士" => GetString("Vindicator"),
+            "寄生蟲" or "寄生虫" => GetString("Parasite"),
+            "抑鬱者" or "抑郁者" => GetString("Inhibitor"),
+            "破壞者" or "破坏者" => GetString("Saboteur"),
+            "議員" or "议员" => GetString("Councillor"),
+            "眩暈者" or "眩晕者" => GetString("Dazzler"),
+            "被清洗的" or "被清洗的" => GetString("Cleansed"),
+            "死亡契約" or "死亡契约" => GetString("Deathpact"),
+            "吞噬者" or "吞噬者" => GetString("Devourer"),
+            "軍師" or "军师" => GetString("EvilDiviner"),
+            "化形者" or "化形者" => GetString("Morphling"),
+            "龍捲風" or "龙卷风" => GetString("Twister"),
+            "潜伏者" or "潜伏者" => GetString("Lurker"),
+            "罪犯" or "罪犯" => GetString("Convict"),
+            "幻想家" or "幻想家" => GetString("Visionary"),
+            "逃亡者" or "逃亡者" => GetString("Refugee"),
+            "失敗者" or "失败者" => GetString("Underdog"),
+            "速度者" or "速度者" => GetString("Ludopath"),
+            "天文學家" or "天文学家" => GetString("Chronomancer"),
+            "設陷者" or "设陷者" => GetString("Pitfall"),
+            "狂戰士" or "狂战士" => GetString("Berserker"),
+            "預言家" or "预言家" => GetString("Farseer"),
+            "驗屍官" or "验尸官" => GetString("Bloodhound"),
+            "正義追踪者" or "正义追踪者" => GetString("Tracker"),
+            "商人" or "商人" => GetString("Merchant"),
+            "懲罰者" or "惩罚者" => GetString("Retributionist"),
+            "捕快" or "捕快" => GetString("Deputy"),
+            "守護者" or "守护者" => GetString("Guardian"),
+            "癮君子" or "瘾君子" => GetString("Addict"),
+            "尋迹者" or "寻迹者" => GetString("Tracefinder"),
+            "神谕" => GetString("Oracle"),
+            "灵魂论者" => GetString("Spiritualist"),
+            "变色龙" => GetString("Chameleon"),
+            "检查员" => GetString("ParityCop"),
+            "仰慕者" => GetString("Admirer"),
+            "时间之主" => GetString("TimeMaster"),
+            "十字军" => GetString("Crusader"),
+            "遐想者" => GetString("Reverie"),
+            "瞭望员" => GetString("Lookout"),
+            "通信员" or "通讯员" => GetString("Monitor"),
+            "执灯人" => GetString("Lighter"),
+            "任务管理者" => GetString("TaskManager"),
+            "目击者" => GetString("Witness"),
+            "连环杀手" => GetString("NSerialKiller"),
+            "天启" => GetString("Juggernaut"),
+            "感染者" => GetString("Infectious"),
+            "病毒" => GetString("Virus"),
+            "追击者" => GetString("Pursuer"),
+            "幻影" => GetString("Phantom"),
+            "决斗者" => GetString("Pirate"),
+            "煽动者" => GetString("Agitater"),
+            "独行者" => GetString("Maverick"),
+            "被诅咒的灵魂" => GetString("CursedSoul"),
+            "小偷" => GetString("Pickpocket"),
+            "背叛者" => GetString("Traitor"),
+            "秃鹫" => GetString("Vulture"),
+            "美杜莎" => GetString("Medusa"),
+            "面包师" => GetString("Baker"),
+            "饥荒" => GetString("Famine"),
+            "灵魂召唤者" => GetString("Spiritcaller"),
+            "失忆者" => GetString("Amnesiac"),
+            "受虐狂" => GetString("Masochist"),
+            "末日赌怪" => GetString("Doomsayer"),
+            "裹尸布" => GetString("Shroud"),
+            "狼人" => GetString("Werewolf"),
+            "萨满" => GetString("Shaman"),
+            "探索者" => GetString("Seeker"),
             //"神秘者"=> GetString("Occultist"),
-            "遮蔽者"=> GetString("Shade"),
-            "灵魂收集者"=> GetString("SoulCollector"),
-            "浪漫者"=> GetString("Romantic"),
-            "复仇浪漫者"=> GetString("VengefulRomantic"),
-            "无情浪漫者"=> GetString("RuthlessRomantic"),
-            "投毒者"=> GetString("Poisoner"),
-            "巫师"=> GetString("HexMaster"),
-            "魅影"=> GetString("Wraith"),
-            "扫把星"=> GetString("Jinx"),
-            "药剂师"=> GetString("PotionMaster"),
-            "祭祀者"=> GetString("Ritualist"),
-            "亡灵巫师"=> GetString("Necromancer"),
+            "遮蔽者" => GetString("Shade"),
+            "灵魂收集者" => GetString("SoulCollector"),
+            "浪漫者" => GetString("Romantic"),
+            "复仇浪漫者" => GetString("VengefulRomantic"),
+            "无情浪漫者" => GetString("RuthlessRomantic"),
+            "投毒者" => GetString("Poisoner"),
+            "巫师" => GetString("HexMaster"),
+            "魅影" => GetString("Wraith"),
+            "扫把星" => GetString("Jinx"),
+            "药剂师" => GetString("PotionMaster"),
+            "祭祀者" => GetString("Ritualist"),
+            "亡灵巫师" => GetString("Necromancer"),
             "好迷你船员" => GetString("NiceMini"),
             "坏迷你船员" => GetString("EvilMini"),
             _ => text,
@@ -1065,7 +1065,7 @@ internal class ChatCommands
             var roleName = GetString(rl.ToString()).ToLower().Trim().Replace(" ", "");
             string nameWithoutId = Regex.Replace(name.Replace(" ", ""), @"^\d+", "");
             if (nameWithoutId == roleName)
-            {          
+            {
                 role = rl;
                 return true;
             }
@@ -1077,6 +1077,7 @@ internal class ChatCommands
         role = role.Trim().ToLower();
         if (role.StartsWith("/r")) role.Replace("/r", string.Empty);
         if (role.StartsWith("/up")) role.Replace("/up", string.Empty);
+        if (role.StartsWith("/dr")) role.Replace("/dr", string.Empty);
         if (role.EndsWith("\r\n")) role.Replace("\r\n", string.Empty);
         if (role.EndsWith("\n")) role.Replace("\n", string.Empty);
 
@@ -1097,7 +1098,34 @@ internal class ChatCommands
                 string devMark = "";
                 if ((isDev || isUp) && GameStates.IsLobby)
                 {
-                    
+                    if (!CustomRolesHelper.CanBePreAssigned(rl))
+                    {
+                        Utils.SendMessage(GetString("Message.YTPlanSelectFailed"), playerId);
+                        return;
+                    }
+
+                    if (!rl.IsAdditionRole())
+                    {
+                        Main.DevRole.Remove(playerId);
+                        Main.DevRole.Add(playerId, rl);
+                        Utils.SendMessage("role selected", playerId);
+                        return;
+                    }
+                    else
+                    {
+                        if (!Main.DevSubRoles.ContainsKey(playerId))
+                        {
+                            Main.DevSubRoles.Add(playerId, new());
+                            Main.DevSubRoles[playerId].Add(rl);
+                            Utils.SendMessage("addon selected", playerId);
+                        }
+                        else if (!Main.DevSubRoles[playerId].Contains(rl))
+                        {
+                            Main.DevSubRoles[playerId].Add(rl);
+                            Utils.SendMessage("addon selected", playerId);
+                        }
+                        else Utils.SendMessage("addon already", playerId);
+                    }
                 }
                 var sb = new StringBuilder();
                 sb.Append(devMark + roleName + Utils.GetRoleMode(rl) + GetString($"{rl}InfoLong"));
@@ -1111,7 +1139,7 @@ internal class ChatCommands
                 return;
             }
         }
-        if (isUp) Utils.SendMessage(GetString("Message.YTPlanCanNotFindRoleThePlayerEnter"), playerId);
+        if (isUp || isDev) Utils.SendMessage(GetString("Message.YTPlanCanNotFindRoleThePlayerEnter"), playerId);
         else Utils.SendMessage(GetString("Message.CanNotFindRoleThePlayerEnter"), playerId);
         return;
     }
@@ -1148,10 +1176,10 @@ internal class ChatCommands
         {
             ChatManager.SendPreviousMessagesToAll();
             ChatManager.cancel = false;
-            canceled = true; 
-            return; 
+            canceled = true;
+            return;
         }
-        
+
         switch (args[0])
         {
             case "/l":
@@ -1608,7 +1636,7 @@ internal class ChatCommands
                     Utils.SendMessage(GetString("ColorCommandNoLobby"), player.PlayerId);
                     break;
                 }
-                if (!Options.GradientTagsOpt.GetBool()) 
+                if (!Options.GradientTagsOpt.GetBool())
                 {
                     subArgs = args.Length != 2 ? "" : args[1];
                     if (string.IsNullOrEmpty(subArgs) || !Utils.CheckColorHex(subArgs))
@@ -1665,8 +1693,8 @@ internal class ChatCommands
                     Utils.SendMessage(GetString("VipColorCommandNoLobby"), player.PlayerId);
                     break;
                 }
-                if (!Options.GradientTagsOpt.GetBool()) 
-                { 
+                if (!Options.GradientTagsOpt.GetBool())
+                {
                     subArgs = args.Length != 2 ? "" : args[1];
                     if (string.IsNullOrEmpty(subArgs) || !Utils.CheckColorHex(subArgs))
                     {
@@ -1680,7 +1708,7 @@ internal class ChatCommands
                         Logger.Warn($"File Not exist, creating file at {vipTagsFiles}/{player.FriendCode}.txt", "vipcolor");
                         File.Create(colorFilePathh).Close();
                     }
-        
+
                     File.WriteAllText(colorFilePathh, $"{subArgs}");
                     break;
                 }
@@ -1832,7 +1860,7 @@ internal class ChatCommands
                 else
                 {
                     var rand = IRandom.Instance;
-                    int botChoice = rand.Next(1,101);
+                    int botChoice = rand.Next(1, 101);
                     var coinSide = (botChoice < 51) ? GetString("Heads") : GetString("Tails");
                     Utils.SendMessage(String.Format(GetString("CoinFlipResult"), coinSide), player.PlayerId);
                     break;
@@ -1885,12 +1913,12 @@ internal class ChatCommands
                     }
                     else
                     {
-                        Utils.SendMessage(String.Format(GetString("GNoWon"), 7-Main.GuessNumber[player.PlayerId][1]), player.PlayerId);
+                        Utils.SendMessage(String.Format(GetString("GNoWon"), 7 - Main.GuessNumber[player.PlayerId][1]), player.PlayerId);
                         break;
                     }
                 }
 
-                default:
+            default:
                 if (SpamManager.CheckSpam(player, text)) return;
                 break;
         }

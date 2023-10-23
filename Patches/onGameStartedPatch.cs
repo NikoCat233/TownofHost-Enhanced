@@ -1147,9 +1147,8 @@ internal class SelectRolesPatch
                 }
             }
             if (dcount < 1) goto normalSubRegister;
-            count -= dcount; //count < 0 works for normal register LOL
-
-            Main.DevSubRoles.Where(x => x.Value.Contains(role))
+            count -= dcount; //count < 0 works for normal register
+            Main.DevSubRoles.Where(x => x.Value.Contains(role) && CustomRolesHelper.CheckAddonConfilct(role, Utils.GetPlayerById(x.Key)))
                 .Do(x => Main.PlayerStates[x.Key].SetSubRole(role));
         }
 

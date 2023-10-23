@@ -1670,6 +1670,25 @@ static class CustomRolesHelper
            _ => role.IsImpostorTeam() ? CountTypes.Impostor : CountTypes.Crew,
        };
     public static bool HasSubRole(this PlayerControl pc) => Main.PlayerStates[pc.PlayerId].SubRoles.Any();
+
+    public static bool CanBePreAssigned(CustomRoles role)
+    {
+        if (role.GetCount() < 1) return false;
+        if (!role.IsAdditionRole()) return true;
+        if (role.IsConverted()) return false;
+        switch (role)
+        {
+            case CustomRoles.Lovers:
+            case CustomRoles.Madmate:
+            case CustomRoles.LastImpostor:
+            case CustomRoles.Workhorse:
+            case CustomRoles.Cleansed:
+                return false;
+            default:
+                break;
+        }
+        return false;
+    }
 }
 public enum CustomRoleTypes
 {
