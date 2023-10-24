@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using TOHE.Modules;
 using TOHE.Roles.Crewmate;
 using TOHE.Roles.Neutral;
+using UnityEngine.XR;
 using static TOHE.Translator;
 using static UnityEngine.GraphicsBuffer;
 
@@ -119,6 +120,13 @@ class OnPlayerLeftPatch
     {
         try
         {
+            if (GameStates.IsLobby)
+            {
+                if (Main.DevRole.ContainsKey(data.Character.PlayerId))
+                    Main.DevRole.Remove(data.Character.PlayerId);
+                if (Main.DevSubRoles.ContainsKey(data.Character.PlayerId))
+                    Main.DevSubRoles.Remove(data.Character.PlayerId);
+            }
             if (GameStates.IsInGame)
             {
                 if (data.Character.Is(CustomRoles.Lovers) && !data.Character.Data.IsDead)

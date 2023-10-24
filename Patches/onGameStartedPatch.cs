@@ -471,9 +471,17 @@ internal class SelectRolesPatch
             }
 
             if (CustomRoles.Lovers.IsEnable() && (CustomRoles.FFF.IsEnable() ? -1 : rd.Next(1, 100)) <= Options.LoverSpawnChances.GetInt()) AssignLoversRolesFromList();
+
+            if (DevAddonRolesList.Any())
+            {
+                foreach (var role in DevAddonRolesList)
+                {
+                    if (role.IsEnable()) AssignSubRoles(role);
+                }
+            }
             foreach (var role in AddonRolesList)
             {
-                if (rd.Next(1, 100) <= (Options.CustomAdtRoleSpawnRate.TryGetValue(role, out var sc) ? sc.GetFloat() : 0) || DevManager.isDevAddon(role))
+                if (rd.Next(1, 100) <= (Options.CustomAdtRoleSpawnRate.TryGetValue(role, out var sc) ? sc.GetFloat() : 0))
                     if (role.IsEnable()) AssignSubRoles(role);
             }
 
@@ -1150,6 +1158,9 @@ internal class SelectRolesPatch
             count -= dcount; //count < 0 works for normal register
             Main.DevSubRoles.Where(x => x.Value.Contains(role) && CustomRolesHelper.CheckAddonConfilct(role, Utils.GetPlayerById(x.Key)))
                 .Do(x => Main.PlayerStates[x.Key].SetSubRole(role));
+
+            Main.DevSubRoles.Where(x => x.Value.Contains(role))
+                .Do(x => x.Value.Remove(role));
         }
 
     normalSubRegister:

@@ -1673,8 +1673,8 @@ static class CustomRolesHelper
 
     public static bool CanBePreAssigned(CustomRoles role)
     {
-        if (role.GetCount() < 1) return false;
-        if (!role.IsAdditionRole()) return true;
+        if (!role.IsAdditionRole() && role.GetCount() >= 1) return true;
+        if (role.IsAdditionRole() && role.GetChance() > 0) return true;
         if (role.IsConverted()) return false;
         switch (role)
         {
@@ -1687,7 +1687,7 @@ static class CustomRolesHelper
             default:
                 break;
         }
-        return false;
+        return false; //huh?
     }
 }
 public enum CustomRoleTypes

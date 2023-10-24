@@ -461,16 +461,21 @@ internal class CustomRoleSelector
     }
 
     public static List<CustomRoles> AddonRolesList = new();
+    public static List<CustomRoles> DevAddonRolesList = new();
     public static void SelectAddonRoles()
     {
         AddonRolesList = new();
+        DevAddonRolesList = new();
         foreach (var cr in CustomRolesHelper.AllRoles)
         {
             CustomRoles role = (CustomRoles)Enum.Parse(typeof(CustomRoles), cr.ToString());
             if (!role.IsAdditionRole()) continue;
             if (role is CustomRoles.Madmate && Options.MadmateSpawnMode.GetInt() != 0) continue;
             if (role is CustomRoles.Lovers or CustomRoles.LastImpostor or CustomRoles.Workhorse) continue;
-            AddonRolesList.Add(role);
+            if (DevManager.isDevAddon(role))
+                DevAddonRolesList.Add(role);
+            else
+                AddonRolesList.Add(role);
         }
     }
 }

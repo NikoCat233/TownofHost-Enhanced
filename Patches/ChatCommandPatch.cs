@@ -1093,11 +1093,18 @@ internal class ChatCommands
         {
             if (rl.IsVanilla()) continue;
             var roleName = GetString(rl.ToString());
-            if (role == roleName.ToLower().Trim().TrimStart('*').Replace(" ", string.Empty))
+            if (role == roleName.ToLower().Trim().TrimStart('*').Replace(" ", string.Empty) || role == "clear")
             {
-                string devMark = "";
+                //string devMark = "";
                 if ((isDev || isUp) && GameStates.IsLobby)
                 {
+                    if (role == "clear")
+                    {
+                        Main.DevRole.Remove(playerId);
+                        Main.DevSubRoles.Remove(playerId);
+                        Utils.SendMessage("clear dev role", playerId);
+                        return;
+                    }
                     if (!CustomRolesHelper.CanBePreAssigned(rl))
                     {
                         Utils.SendMessage(GetString("Message.YTPlanSelectFailed"), playerId);
@@ -1118,25 +1125,36 @@ internal class ChatCommands
                             Main.DevSubRoles.Add(playerId, new());
                             Main.DevSubRoles[playerId].Add(rl);
                             Utils.SendMessage("addon selected", playerId);
+                            return;
+                        }
+                        else if (Main.DevSubRoles[playerId].Count() >= Options.NoLimitAddonsNumMax.GetInt())
+                        {
+                            Utils.SendMessage("addon max", playerId);
+                            return;
                         }
                         else if (!Main.DevSubRoles[playerId].Contains(rl))
                         {
                             Main.DevSubRoles[playerId].Add(rl);
                             Utils.SendMessage("addon selected", playerId);
+                            return;
                         }
-                        else Utils.SendMessage("addon already", playerId);
+                        else
+                        {
+                            Utils.SendMessage("addon already", playerId);
+                            return;
+                        }
                     }
                 }
-                var sb = new StringBuilder();
-                sb.Append(devMark + roleName + Utils.GetRoleMode(rl) + GetString($"{rl}InfoLong"));
-                if (Options.CustomRoleSpawnChances.ContainsKey(rl))
-                {
-                    Utils.ShowChildrenSettings(Options.CustomRoleSpawnChances[rl], ref sb, command: true);
-                    var txt = sb.ToString();
-                    sb.Clear().Append(txt.RemoveHtmlTags());
-                }
-                Utils.SendMessage(sb.ToString(), playerId);
-                return;
+                //var sb = new StringBuilder();
+                //sb.Append(devMark + roleName + Utils.GetRoleMode(rl) + GetString($"{rl}InfoLong"));
+                //if (Options.CustomRoleSpawnChances.ContainsKey(rl))
+                //{
+                //    Utils.ShowChildrenSettings(Options.CustomRoleSpawnChances[rl], ref sb, command: true);
+                //    var txt = sb.ToString();
+                //    sb.Clear().Append(txt.RemoveHtmlTags());
+                //}
+                //Utils.SendMessage(sb.ToString(), playerId);
+                //return;
             }
         }
         if (isUp || isDev) Utils.SendMessage(GetString("Message.YTPlanCanNotFindRoleThePlayerEnter"), playerId);
