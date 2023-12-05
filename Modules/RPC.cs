@@ -19,7 +19,7 @@ namespace TOHE;
 enum CustomRPC
 {
     VersionCheck = 60,
-    RequestRetryVersionCheck = 61,
+    RequestRetryVersionCheck,
     SyncCustomSettings = 80,
     RestTOHESetting,
     SetDeathReason,
@@ -32,7 +32,6 @@ enum CustomRPC
     SetKillOrHex,
     SetKillOrCurse,
     SetSheriffShotLimit,
-    //SetCopyCatMiscopyLimit,
     SetDousedPlayer,
     setPlaguedPlayer,
     SetNameColorData,
@@ -49,8 +48,6 @@ enum CustomRPC
     SetCurrentDousingTarget,
     SetEvilTrackerTarget,
     SetRealKiller,
-
-    // TOHE
     AntiBlackout,
     PlayCustomSound,
     SetKillTimer,
@@ -58,8 +55,6 @@ enum CustomRPC
     SyncNameNotify,
     ShowPopUp,
     KillFlash,
-
-    //Roles
     SetDrawPlayer,
     SetCPTasksDone,
     SetCurrentDrawTarget,
@@ -85,8 +80,6 @@ enum CustomRPC
     SetCounterfeiterSellLimit,
     SetPursuerSellLimit,
     SetMedicalerProtectLimit,
-    //SetMiniLimit,
-    //SetMiniSellLimit,
     SetGangsterRecruitLimit,
     SetGhostPlayer,
     SetDarkHiderKillCount,
@@ -123,7 +116,7 @@ enum CustomRPC
     SetMonarchKnightLimit,
     SetDeputyHandcuffLimit,
     SetInvestgatorLimit,
-    SyncInvestigator, // Unused
+    SyncInvestigator,
     SetVirusInfectLimit,
     SetRevealedPlayer,
     SetCurrentRevealTarget,
@@ -150,7 +143,7 @@ enum CustomRPC
     SyncNWitch,
     SyncShroud,
     SyncMiniCrewAge,
-    SyncSabotageMasterSkill,
+    SyncSabotageMasterSkill
 }
 public enum Sounds
 {
