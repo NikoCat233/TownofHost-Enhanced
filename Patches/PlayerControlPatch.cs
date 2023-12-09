@@ -61,7 +61,9 @@ class CmdCheckMurderPatch
         Logger.Info($"{__instance.GetNameWithRole()} => {target.GetNameWithRole()}", "CmdCheckMurder");
         
         if (!AmongUsClient.Instance.AmHost) return true;
-        return CheckMurderPatch.Prefix(__instance, target);
+        CheckMurderPatch.Prefix(__instance, target); 
+        //The return bool is not needed here
+        return false;
     }
 }
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))] // Vanilla
@@ -1260,10 +1262,8 @@ class CheckMurderPatch
         }
 
         //首刀保护
-        if (Main.ShieldPlayer == target.PlayerId && Utils.IsAllAlive)
+        if (target.AmOwner && Utils.IsAllAlive && Options.ShieldPersonDiedFirst.GetBool())
         {
-            Main.ShieldPlayer = byte.MaxValue;
-
             switch (Options.HostGetKilledFirstAction.GetInt())
             {
                 case 0:
@@ -1272,7 +1272,7 @@ class CheckMurderPatch
                 case 1:
                     CustomWinnerHolder.ResetAndSetWinner(CustomWinner.Youtuber);
                     CustomWinnerHolder.WinnerIds.Add(target.PlayerId);
-                    break;
+                    return false;
                 case 2:
                     target.RpcMurderPlayerV3(killer);
                     return false;
@@ -1289,7 +1289,6 @@ class CheckMurderPatch
                     break;
             }
         }
-
         //首刀叛变
         if (Options.MadmateSpawnMode.GetInt() == 1 && Main.MadmateNum < CustomRoles.Madmate.GetCount() && Utils.CanBeMadmate(target, true))
         {
