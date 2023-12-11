@@ -61,8 +61,7 @@ class CmdCheckMurderPatch
         Logger.Info($"{__instance.GetNameWithRole()} => {target.GetNameWithRole()}", "CmdCheckMurder");
         
         if (!AmongUsClient.Instance.AmHost) return true;
-        CheckMurderPatch.Prefix(__instance, target); 
-        //The return bool is not needed here
+        CheckMurderPatch.Prefix(__instance, target);
         return false;
     }
 }
@@ -1262,12 +1261,11 @@ class CheckMurderPatch
         }
 
         //首刀保护
-        if (Main.ShieldPlayer != byte.MaxValue && Main.ShieldPlayer == target.PlayerId && Utils.IsAllAlive)
+        if (Main.ShieldPlayer != "" && Main.ShieldPlayer == target.GetClient().GetHashedPuid() && Utils.IsAllAlive)
         {
-            Main.ShieldPlayer = byte.MaxValue;
-            killer.SetKillCooldown();
+            Main.ShieldPlayer = "";
             killer.RpcGuardAndKill(target);
-            //target.RpcGuardAndKill();
+            killer.SetKillCooldown(forceAnime: true);
             return false;
         }
         //首刀叛变
@@ -1363,7 +1361,7 @@ class MurderPlayerPatch
         }
 
         //看看UP是不是被首刀了
-        if (Main.FirstDied == byte.MaxValue && target.Is(CustomRoles.Youtuber))
+        if (Main.FirstDied == "" && target.Is(CustomRoles.Youtuber))
         {
             CustomSoundsManager.RPCPlayCustomSoundAll("Congrats");
             if (!CustomWinnerHolder.CheckForConvertedWinner(target.PlayerId))
@@ -1374,8 +1372,8 @@ class MurderPlayerPatch
             //Imagine youtuber is converted
         }
 
-        if (Main.FirstDied == byte.MaxValue)
-            Main.FirstDied = target.PlayerId;
+        if (Main.FirstDied == "")
+            Main.FirstDied = target.GetClient().GetHashedPuid();
 
         if (target.Is(CustomRoles.Bait))
         {
