@@ -1306,7 +1306,7 @@ class MurderPlayerPatch
             Camouflage.RpcSetSkin(target, ForceRevert: true);
         }
 
-        if (!Main.UseVersionProtocol.Value && resultFlags == MurderResultFlags.FailedProtected && __instance.PlayerId != target.PlayerId)
+        if (!Main.UseVersionProtocol.Value && resultFlags == MurderResultFlags.FailedProtected && __instance.PlayerId != target.PlayerId && !__instance.AmOwner)
         {
             if (CheckMurderPatch.Prefix(__instance, target))
                 __instance.RpcMurderPlayerV3(target);
