@@ -1792,6 +1792,11 @@ class ReportDeadBodyPatch
     public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] GameData.PlayerInfo target)
     {
         if (GameStates.IsMeeting) return false;
+        if (EAC.RpcReportDeadBodyCheck(__instance, target))
+        {
+            Logger.Fatal("Eac patched the report body rpc", "ReportDeadBodyPatch");
+            return false;
+        }
         if (Options.DisableMeeting.GetBool()) return false;
         if (!CanReport[__instance.PlayerId])
         {
