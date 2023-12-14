@@ -719,12 +719,6 @@ class CastVotePatch
             switch(voter.GetCustomRole())
             {
                 case CustomRoles.Dictator:
-                    if (target.Is(CustomRoles.Solsticer))
-                    {
-                        Utils.SendMessage(GetString("VoteSolsticer"), srcPlayerId);
-                        __instance.RpcClearVote(voter.GetClientId());
-                        return false;
-                    }
                     if (!target.IsAlive())
                     {
                         Utils.SendMessage(GetString("VoteDead"), srcPlayerId);
