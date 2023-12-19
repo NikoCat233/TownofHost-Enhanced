@@ -64,6 +64,19 @@ public class Main : BasePlugin
     public static readonly bool ShowPatreonButton = true;
     public static readonly string PatreonInviteUrl = "https://www.patreon.com/TOHRE";
 
+    public readonly struct Gitinfo
+    {
+        public readonly string Branch;
+        public readonly string Commit;
+
+        public Gitinfo(string branch, string commit)
+        {
+            Branch = branch;
+            Commit = commit;
+        }
+    }
+    public static Gitinfo fakeGitInfo = new("main", "f9df5c3");
+
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);
     public static BepInEx.Logging.ManualLogSource Logger;

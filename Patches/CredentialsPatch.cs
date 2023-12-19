@@ -78,18 +78,20 @@ public static class Credentials
 #endif
 
 #if CANARY
-            Main.credentialsText += $"\r\n<color=#ffc0cb>Canary:</color><color=#f34c50>{ThisAssembly.Git.Branch}</color>(<color=#ffc0cb>{ThisAssembly.Git.Commit}</color>)";
-            Main.credentialsText += $"\r\n<color=#a54aff>By <color=#ffc0cb>KARPED1EM</color> & </color><color=#f34c50>Moe</color>";
+            Main.credentialsText += $"\r\n<color=#ffc0cb>Canary:</color><color=#f34c50>{ThisAssembly.Git.Branch}</color>(<color=#ffc0cb>{ThisAssembly.Git.Commit}/</color>)";
+            if (Main.fakeGitInfo.Branch != "" && Main.fakeGitInfo.Commit != "")
+                Main.credentialsText += $"\r\n<color=#ffc0cb>FakeGitInfo:</color><color=#f34c50>{Main.fakeGitInfo.Branch}</color>(<color=#ffc0cb>{Main.fakeGitInfo.Commit}</color>)";
             buildtype = "Canary";
 #endif
 
 #if DEBUG
             Main.credentialsText += $"\r\n<color=#ffc0cb>Debug:</color><color=#f34c50>{ThisAssembly.Git.Branch}</color>(<color=#ffc0cb>{ThisAssembly.Git.Commit}</color>)";
-            Main.credentialsText += $"\r\n<color=#a54aff>By <color=#ffc0cb>KARPED1EM</color> & </color><color=#f34c50>Moe</color>";
+            if (Main.fakeGitInfo.Branch != "" && Main.fakeGitInfo.Commit != "")
+                Main.credentialsText += $"\r\n<color=#ffc0cb>FakeGitInfo:</color><color=#f34c50>{Main.fakeGitInfo.Branch}</color>(<color=#ffc0cb>{Main.fakeGitInfo.Commit}</color>)";
             buildtype = "Debug";
 #endif
             Logger.Info($"v{Main.PluginVersion}, {buildtype}:{ThisAssembly.Git.Branch}:({ThisAssembly.Git.Commit}), link [{ThisAssembly.Git.RepositoryUrl}], dirty: [{ThisAssembly.Git.IsDirty}]", "TOHE version");
-
+            Logger.Info($"v{Main.PluginVersion}, {buildtype}:{Main.fakeGitInfo.Branch}:({Main.fakeGitInfo.Commit}), link [{ThisAssembly.Git.RepositoryUrl}], dirty: [{ThisAssembly.Git.IsDirty}]", "FakeGit version");
             if (Main.IsAprilFools)
                 Main.credentialsText = $"\r\n<color=#00bfff>Town Of Host</color> v11.45.14";
 
@@ -160,7 +162,7 @@ public static class Credentials
                 LoadingHintText.alignment = TextAlignmentOptions.Center;
                 LoadingHintText.fontSize = 2f;
                 LoadingHintText.transform.position = amongUsLogo.transform.position;
-                LoadingHintText.transform.position += new Vector3 (-0.25f, -0.9f, 0f);
+                LoadingHintText.transform.position += new Vector3(-0.25f, -0.9f, 0f);
                 LoadingHintText.color = new Color32(17, 255, 1, byte.MaxValue);
                 __instance.playButton.transform.gameObject.SetActive(false);
             }
