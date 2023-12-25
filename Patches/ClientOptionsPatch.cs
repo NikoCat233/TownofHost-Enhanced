@@ -25,6 +25,7 @@ public static class OptionsMenuBehaviourStartPatch
 #if DEBUG
     private static ClientOptionItem VersionCheat;
     private static ClientOptionItem GodMode;
+    private static ClientOptionItem AutoRehost;
 #endif
 
     public static void Postfix(OptionsMenuBehaviour __instance)
@@ -37,6 +38,7 @@ public static class OptionsMenuBehaviourStartPatch
             Main.ResetOptions = false;
             Main.VersionCheat.Value = false;
             Main.GodMode.Value = false;
+            Main.AutoRehost.Value = false;
         }
 
         if (UnlockFPS == null || UnlockFPS.ToggleButton == null)
@@ -125,6 +127,10 @@ public static class OptionsMenuBehaviourStartPatch
         if ((GodMode == null || GodMode.ToggleButton == null) && DebugModeManager.AmDebugger)
         {
             GodMode = ClientOptionItem.Create("GodMode", Main.GodMode, __instance);
+        }
+        if ((AutoRehost == null || AutoRehost.ToggleButton == null) && DebugModeManager.AmDebugger)
+        {
+            AutoRehost = ClientOptionItem.Create("AutoRehost", Main.AutoRehost, __instance);
         }
 #endif
     }
