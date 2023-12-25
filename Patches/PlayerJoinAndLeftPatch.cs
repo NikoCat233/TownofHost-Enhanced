@@ -35,6 +35,7 @@ class OnGameJoinedPatch
 
         if (AmongUsClient.Instance.AmHost) // Execute the following only on the host
         {
+            EndGameManagerPatch.IsRestarting = false;
             if (!RehostManager.IsAutoRehostDone)
             {
                 AmongUsClient.Instance.ChangeGamePublic(RehostManager.ShouldPublic);
