@@ -75,7 +75,7 @@ public class Main : BasePlugin
             Commit = commit;
         }
     }
-    public static Gitinfo fakeGitInfo = new("main", "f9df5c3");
+    public static Gitinfo fakeGitInfo = new("main", "0e8809f");
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);
