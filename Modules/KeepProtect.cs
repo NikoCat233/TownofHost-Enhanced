@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Hazel;
 using System.Linq;
+using InnerNet;
 
 namespace TOHE.Modules
 {
@@ -22,14 +23,13 @@ namespace TOHE.Modules
                 messageWriter.Write(18);
                 AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
                 */
-                var sender = CustomRpcSender.Create("KeepProtectSender", sendOption: SendOption.Reliable);
-                sender.AutoStartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.ProtectPlayer)
-                    .WriteNetObject(target)
-                    .Write(18)
-                    .EndRpc();
-                sender.SendMessage();
-            }
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId,
+                    (byte)RpcCalls.ProtectPlayer, SendOption.Reliable, -1);
+                writer.WriteNetObject(target);
+                writer.Write(PlayerControl.LocalPlayer.CurrentOutfit.ColorId);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
 
+            }
             //Host ignore this rpc so ability cooldown wont get reset
         }
         public static void OnFixedUpdate()

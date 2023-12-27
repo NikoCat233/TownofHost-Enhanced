@@ -80,6 +80,7 @@ public class GameStartManagerPatch
 
             AURoleOptions.GuardianAngelCooldown = Spiritcaller.SpiritAbilityCooldown.GetFloat();
             AURoleOptions.ProtectionDurationSeconds = Main.UseVersionProtocol.Value ? 0 : 60f;
+            AURoleOptions.ImpostorsCanSeeProtect = false;
         }
     }
 
