@@ -53,19 +53,19 @@ class CheckProtectPatch
         return true;
     }
 }
-[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))] // Modded
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))] // Local Side click kill button
 class CmdCheckMurderPatch
 {
     public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
     {
         Logger.Info($"{__instance.GetNameWithRole()} => {target.GetNameWithRole()}", "CmdCheckMurder");
         
-        if (!AmongUsClient.Instance.AmHost) return true;
-        CheckMurderPatch.Prefix(__instance, target);
+        if (!AmongUsClient.Instance.AmHost || !GameStates.IsModHost) return true;
+        __instance.CheckMurder(target);
         return false;
     }
 }
-[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))] // Vanilla
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))] // Upon receive rpc calls / Local Host
 class CheckMurderPatch
 {
     public static Dictionary<byte, float> TimeSinceLastKill = new();
@@ -1293,7 +1293,7 @@ class MurderPlayerPatch
 {
     public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] MurderResultFlags resultFlags)
     {
-        Logger.Info($"{__instance.GetNameWithRole()} => {target.GetNameWithRole()}{(target.IsProtected() ? "(Protected)" : "")}", "MurderPlayer");
+        Logger.Info($"{__instance.GetNameWithRole()} => {target.GetNameWithRole()}{(target.IsProtected() ? "(Protected)" : "")}, flags: {resultFlags}", "MurderPlayer");
 
         if (RandomSpawn.CustomNetworkTransformPatch.NumOfTP.TryGetValue(__instance.PlayerId, out var num) && num > 2)
         {
