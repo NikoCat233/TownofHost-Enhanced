@@ -17,6 +17,7 @@ public static class OptionsMenuBehaviourStartPatch
     private static ClientOptionItem ForceOwnLanguageRoleName;
     private static ClientOptionItem EnableCustomButton;
     private static ClientOptionItem EnableCustomSoundEffect;
+    private static ClientOptionItem HostPublic;
     private static ClientOptionItem ShowTextOverlay;
     private static ClientOptionItem ModeForSmallScreen;
     private static ClientOptionItem EnableRoleSummary;
@@ -92,6 +93,10 @@ public static class OptionsMenuBehaviourStartPatch
         if (EnableCustomSoundEffect == null || EnableCustomSoundEffect.ToggleButton == null)
         {
             EnableCustomSoundEffect = ClientOptionItem.Create("EnableCustomSoundEffect", Main.EnableCustomSoundEffect, __instance);
+        }
+        if (HostPublic == null || HostPublic.ToggleButton == null)
+        {
+            HostPublic = ClientOptionItem.Create("HostPublic", Main.HostPublic, __instance);
         }
         if (ShowTextOverlay == null || ShowTextOverlay.ToggleButton == null)
         {

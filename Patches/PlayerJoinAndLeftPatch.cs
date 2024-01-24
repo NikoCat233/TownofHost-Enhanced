@@ -2,10 +2,8 @@ using AmongUs.Data;
 using AmongUs.GameOptions;
 using HarmonyLib;
 using Hazel;
-using Il2CppSystem.Threading.Tasks;
 using InnerNet;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TOHE.Modules;
@@ -37,7 +35,7 @@ class OnGameJoinedPatch
         GameStates.InGame = false;
         ErrorText.Instance.Clear();
 
-        if (HorseModePatch.GetRealConstant() != Constants.GetBroadcastVersion() - 25 && GameStates.IsOnlineGame)
+        if (!Main.HostPublic.Value && HorseModePatch.GetRealConstant() != Constants.GetBroadcastVersion() - 25 && GameStates.IsOnlineGame)
         {
             AmongUsClient.Instance.ExitGame(DisconnectReasons.Hacking);
             SceneChanger.ChangeScene("MainMenu");

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TOHE.Modules;
-using TOHE.Patches;
 using TOHE.Roles.AddOns.Common;
 using TOHE.Roles.AddOns.Crewmate;
 using TOHE.Roles.Crewmate;
@@ -1266,16 +1265,19 @@ class MurderPlayerPatch
 
         if (AmongUsClient.Instance.AmHost)
         {
-            if (resultFlags == MurderResultFlags.Succeeded)
+            if (!Main.HostPublic.Value)
             {
-                __instance.RpcSpecificMurderPlayer(__instance, __instance);
-                EAC.Report(__instance, "No check murder");
-                EAC.WarnHost();
-                EAC.HandleCheat(__instance, "No check murder");
-                return false;
+                if (resultFlags == MurderResultFlags.Succeeded)
+                {
+                    __instance.RpcSpecificMurderPlayer(__instance, __instance);
+                    EAC.Report(__instance, "No check murder");
+                    EAC.WarnHost();
+                    EAC.HandleCheat(__instance, "No check murder");
+                    return false;
+                }
+                //As long as the check murder is done by host, the murder result flags will always have DecisionByHost
+                //Succeed means the client send a murder player rpc without check murder to host
             }
-            //As long as the check murder is done by host, the murder result flags will always have DecisionByHost
-            //Succeed means the client send a murder player rpc without check murder to host
         }
         return true;
     }

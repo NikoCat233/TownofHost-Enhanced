@@ -2314,19 +2314,19 @@ class ChatUpdatePatch
             DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
             player.SetName(name);
         }
-        var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-        writer.StartMessage(clientId);
-        writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-            .Write(title)
-            .EndRpc();
-        writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
-            .Write(msg)
-            .EndRpc();
-        writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-            .Write(player.Data.PlayerName)
-            .EndRpc();
-        writer.EndMessage();
-        writer.SendMessage();
+        //var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+        //writer.StartMessage(clientId);
+        //writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+        //    .Write(title)
+        //    .EndRpc();
+        //writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+        //    .Write(msg)
+        //    .EndRpc();
+        //writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+        //    .Write(player.Data.PlayerName)
+        //    .EndRpc();
+        //writer.EndMessage();
+        //writer.SendMessage();
         __instance.timeSinceLastMessage = 0f;
     }
 }

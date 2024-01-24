@@ -159,6 +159,7 @@ public static class Camouflage
     public static void RpcSetSkin(PlayerControl target, bool ForceRevert = false, bool RevertToDefault = false, bool GameEnd = false)
     {
         if (!(AmongUsClient.Instance.AmHost && (Options.CommsCamouflage.GetBool() || Camouflager.IsEnable))) return;
+        if (Main.HostPublic.Value) return;
         if (target == null) return;
 
         var id = target.PlayerId;

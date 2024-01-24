@@ -89,6 +89,7 @@ public static class Utils
         Logger.Info($" {player.GetNameWithRole().RemoveHtmlTags()} => {location}", "RpcTeleport");
         Logger.Info($" Player Id: {player.PlayerId}", "RpcTeleport");
 
+        if (Main.HostPublic.Value) return;
         if (player.inVent
             || player.MyPhysics.Animations.IsPlayingEnterVentAnimation())
         {

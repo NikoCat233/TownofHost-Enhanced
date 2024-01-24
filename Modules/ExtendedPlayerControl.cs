@@ -187,13 +187,14 @@ static class ExtendedPlayerControl
         // Other Clients
         if (killer.PlayerId != 0)
         {
+            var senderpc = Main.HostPublic.Value ? PlayerControl.LocalPlayer : killer;
             var sender = CustomRpcSender.Create("GuardAndKill Sender", SendOption.None);
             sender.StartMessage(killer.GetClientId());
             sender.StartRpc(killer.NetId, (byte)RpcCalls.ProtectPlayer)
                 .WriteNetObject(target)
                 .Write(colorId)
                 .EndRpc();
-            sender.StartRpc(killer.NetId, (byte)RpcCalls.MurderPlayer)
+            sender.StartRpc(senderpc.NetId, (byte)RpcCalls.MurderPlayer)
                 .WriteNetObject(target)
                 .Write((int)(MurderResultFlags.FailedProtected | MurderResultFlags.DecisionByHost))
                 .EndRpc();
@@ -279,9 +280,11 @@ static class ExtendedPlayerControl
         }
         else
         {
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, seer.GetClientId());
+            var sender = Main.HostPublic.Value ? PlayerControl.LocalPlayer : killer;
+            var resultFlags = Main.HostPublic.Value ? MurderResultFlags.Succeeded : ResultFlags;
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, seer.GetClientId());
             messageWriter.WriteNetObject(target);
-            messageWriter.Write((int)ResultFlags);
+            messageWriter.Write((int)resultFlags);
             AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
         }
     } //Must provide seer, target
@@ -301,6 +304,7 @@ static class ExtendedPlayerControl
     {
         if (!AmongUsClient.Instance.AmHost) return; // Nothing happens when run by anyone other than the host.
         Logger.Info($"Ability cooldown reset: {target.name}({target.PlayerId})", "RpcResetAbilityCooldown");
+        //This can be run on public protocol bcz check protect and protect player is done by host
         if (target.Is(CustomRoles.Glitch))
         {
             Glitch.LastHack = Utils.GetTimeStamp();
@@ -1202,8 +1206,15 @@ static class ExtendedPlayerControl
             Susceptible.CallEnabledAndChange(player);
         }
         player.Exiled();
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        if (Main.HostPublic.Value)
+        {
+            AntiBlackout.SendGameData("RpcExileV2");
+        }
+        else
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
     }
     public static void RpcMurderPlayerV3(this PlayerControl killer, PlayerControl target)
     {
@@ -1238,24 +1249,33 @@ static class ExtendedPlayerControl
             return;
         }
 
-        if (killer.PlayerId == target.PlayerId && killer.shapeshifting)
+        if (Main.HostPublic.Value)
         {
-            _ = new LateTask(() => { killer.RpcMurderPlayer(target, true); }, 1.5f, "Shapeshifting Suicide Delay");
-            return;
+            killer.RpcMurderPlayerV2(target);
         }
+        else
+        {
+            if (killer.PlayerId == target.PlayerId && killer.shapeshifting)
+            {
+                _ = new LateTask(() => { killer.RpcMurderPlayer(target, true); }, 1.5f, "Shapeshifting Suicide Delay");
+                return;
+            }
 
-        killer.RpcMurderPlayer(target, true);
+            killer.RpcMurderPlayer(target, true);
+        }
     }
     public static void RpcMurderPlayerV2(this PlayerControl killer, PlayerControl target)
     {
         if (target == null) target = killer;
+        var sender = Main.HostPublic.Value ? PlayerControl.LocalPlayer : killer;
+        var resultFlags = Main.HostPublic.Value ? MurderResultFlags.Succeeded : ResultFlags;
         if (AmongUsClient.Instance.AmClient)
         {
-            killer.MurderPlayer(target, ResultFlags);
+            killer.MurderPlayer(target, resultFlags);
         }
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, -1);
+        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, -1);
         messageWriter.WriteNetObject(target);
-        messageWriter.Write((int)ResultFlags);
+        messageWriter.Write((int)resultFlags);
         AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
         Utils.NotifyRoles();
     }

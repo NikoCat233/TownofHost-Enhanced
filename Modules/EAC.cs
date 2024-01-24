@@ -162,6 +162,7 @@ internal class EAC
                     }
                     break;
                 case RpcCalls.MurderPlayer:
+                    if (Main.HostPublic.Value && !GameStates.IsInGame) return false;
                     //Calls will only be sent by server / host
                     Report(pc, "Directly Murder Player");
                     HandleCheat(pc, "Directly Murder Player");

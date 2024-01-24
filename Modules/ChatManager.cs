@@ -179,19 +179,19 @@ namespace TOHE.Modules.ChatManager
                     DestroyableSingleton<HudManager>.Instance.Chat.AddChat(firstAlivePlayer, spamMsg);
                     firstAlivePlayer.SetName(name);
                     //}
-                    var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-                    writer.StartMessage(clientId);
-                    writer.StartRpc(firstAlivePlayer.NetId, (byte)RpcCalls.SetName)
-                        .Write(title)
-                        .EndRpc();
-                    writer.StartRpc(firstAlivePlayer.NetId, (byte)RpcCalls.SendChat)
-                        .Write(spamMsg)
-                        .EndRpc();
-                    writer.StartRpc(firstAlivePlayer.NetId, (byte)RpcCalls.SetName)
-                        .Write(name)
-                        .EndRpc();
-                    writer.EndMessage();
-                    writer.SendMessage();
+                    //var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                    //writer.StartMessage(clientId);
+                    //writer.StartRpc(firstAlivePlayer.NetId, (byte)RpcCalls.SetName)
+                    //    .Write(title)
+                    //    .EndRpc();
+                    //writer.StartRpc(firstAlivePlayer.NetId, (byte)RpcCalls.SendChat)
+                    //    .Write(spamMsg)
+                    //    .EndRpc();
+                    //writer.StartRpc(firstAlivePlayer.NetId, (byte)RpcCalls.SetName)
+                    //    .Write(name)
+                    //    .EndRpc();
+                    //writer.EndMessage();
+                    //writer.SendMessage();
                     //DestroyableSingleton<HudManager>.Instance.Chat.AddChat(firstAlivePlayer, spamMsg);
                     //var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
 
@@ -257,14 +257,14 @@ namespace TOHE.Modules.ChatManager
                 }
 
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(senderPlayer, senderMessage);
-                var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                //var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
 
-                writer.StartMessage(-1);
-                writer.StartRpc(senderPlayer.NetId, (byte)RpcCalls.SendChat)
-                    .Write(senderMessage)
-                    .EndRpc()
-                    .EndMessage()
-                    .SendMessage();
+                //writer.StartMessage(-1);
+                //writer.StartRpc(senderPlayer.NetId, (byte)RpcCalls.SendChat)
+                //    .Write(senderMessage)
+                //    .EndRpc()
+                //    .EndMessage()
+                //    .SendMessage();
 
                 if (playerDead)
                 {
