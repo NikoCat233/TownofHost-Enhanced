@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using TOHE.Roles.Impostor;
+using UnityEngine;
 using static TOHE.Translator;
 
 namespace TOHE.Modules.ChatManager
@@ -104,7 +106,7 @@ namespace TOHE.Modules.ChatManager
             if (CheckCommond(ref msg, "id|guesslist|gl编号|玩家编号|玩家id|id列表|玩家列表|列表|所有id|全部id|編號|玩家編號")) operate = 1;
             else if (CheckCommond(ref msg, "shoot|guess|bet|st|gs|bt|猜|赌|賭|sp|jj|tl|trial|审判|判|审|審判|審|compare|cmp|比较|比較|duel|sw|swap|st|换票|换|換票|換|finish|结束|结束会议|結束|結束會議|reveal|展示", false)) operate = 2;
             else if (ChatSentBySystem.Contains(getTextHash(msg))) operate = 5;
-            
+
             if ((operate == 1 || Blackmailer.ForBlackmailer.Contains(player.PlayerId)) && player.IsAlive())
             {
                 Logger.Info($"包含特殊信息，不记录", "ChatManager");
@@ -133,10 +135,10 @@ namespace TOHE.Modules.ChatManager
             {
                 if (GameStates.IsExilling)
                 {
-                    if (Options.HideExileChat.GetBool()) 
-                    { 
+                    if (Options.HideExileChat.GetBool())
+                    {
                         Logger.Info($"Message sent in exiling screen, spamming the chat", "ChatManager");
-                        _ = new LateTask (SendPreviousMessagesToAll, 0.3f, "Spamming the chat");
+                        _ = new LateTask(SendPreviousMessagesToAll, 0.3f, "Spamming the chat");
                     }
                     return;
                 }
@@ -150,12 +152,12 @@ namespace TOHE.Modules.ChatManager
                 chatHistory.Add(newChatEntry);
 
                 if (chatHistory.Count > maxHistorySize)
-                    {
-                        chatHistory.RemoveAt(0);
-                    }
-                    cancel = false;
+                {
+                    chatHistory.RemoveAt(0);
                 }
+                cancel = false;
             }
+        }
 
         public static void SendPreviousMessagesToAll()
         {
@@ -280,4 +282,165 @@ namespace TOHE.Modules.ChatManager
             }
         }
     }
+    public class PublicChatManager
+    {
+        public static List<(string, byte, string)> MessagesToSend = new List<(string, byte, string)>();
+        private static float timesincelastsend = 0f;
+        private static float sendlimit = 1.2f;
+        private static int maxlength = 100;
+
+        public static void AddChat(string msg, byte sendTo, string title)
+        {
+            // Remove color and size tags while keeping line breaks and spaces
+            string cleanedMessage = Regex.Replace(msg, "<[^>]+>", "");
+            cleanedMessage = Regex.Replace(cleanedMessage, "\r\n|\r|\n", "  ");
+            // Create a new message with cleaned title and message
+            string fullMessage = $"{title}\n{cleanedMessage}";
+
+            if (title.ToLower() == "host")
+            {
+                bool addedToExistingHost = false;
+                for (int i = 0; i < MessagesToSend.Count; i++)
+                {
+                    if (MessagesToSend[i].Item3.ToLower() == "host")
+                    {
+                        string combinedMsg = $"{MessagesToSend[i].Item1}\n{fullMessage}";
+
+                        if (combinedMsg.Length <= maxlength)
+                        {
+                            MessagesToSend[i] = (combinedMsg, sendTo, title);
+                            addedToExistingHost = true;
+                            break;
+                        }
+                        else
+                        {
+                            List<string> splitMessages = SplitText(fullMessage, maxlength - MessagesToSend[i].Item1.Length - 1);
+                            if (splitMessages.Count > 1)
+                            {
+                                for (int j = 1; j < splitMessages.Count; j++)
+                                {
+                                    MessagesToSend.Insert(i + j, (splitMessages[j], sendTo, title));
+                                }
+                            }
+
+                            MessagesToSend[i] = (splitMessages[0], sendTo, title);
+                            addedToExistingHost = true;
+                            // Remove the break statement to continue checking for additional "host" messages
+                        }
+                    }
+                }
+
+                if (!addedToExistingHost)
+                {
+                    MessagesToSend.Insert(0, (fullMessage, sendTo, title));
+                }
+
+                return;
+            }
+
+            if (fullMessage.Length > maxlength)
+            {
+                List<string> splitMessages = SplitText(fullMessage, maxlength);
+                foreach (var splitMsg in splitMessages)
+                {
+                    MessagesToSend.Add((splitMsg, sendTo, title));
+                }
+            }
+            else
+            {
+                bool replaced = false;
+                for (int i = 0; i < MessagesToSend.Count; i++)
+                {
+                    if (MessagesToSend[i].Item2 == sendTo && MessagesToSend[i].Item3.ToLower() != "host")
+                    {
+                        string combinedMsg = $"{MessagesToSend[i].Item1}\n{fullMessage}";
+
+                        if (combinedMsg.Length <= maxlength)
+                        {
+                            MessagesToSend[i] = (combinedMsg, sendTo, title);
+                            replaced = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!replaced)
+                {
+                    MessagesToSend.Add((fullMessage, sendTo, title));
+                }
+            }
+        }
+        public static void OnFixedUpdate(PlayerControl player)
+        {
+            if (player.PlayerId != PlayerControl.LocalPlayer.PlayerId) return;
+            if (!AmongUsClient.Instance.AmHost || !Main.HostPublic.Value) return;
+            timesincelastsend += Time.fixedDeltaTime;
+            if (timesincelastsend < sendlimit) return;
+
+            if (MessagesToSend.Count > 0)
+            {
+                var sender = PlayerControl.LocalPlayer;
+                bool revived = false;
+                if (sender.Data.IsDead)
+                {
+                    sender.Data.IsDead = false;
+                    AntiBlackout.SendGameData();
+                    revived = true;
+                }
+
+                (string msg, byte sendTo, string title) = MessagesToSend[0];
+                MessagesToSend.RemoveAt(0);
+                msg = Regex.Replace(msg, "<[^>]+>", "");
+                msg = Regex.Replace(msg, "\r\n|\r|\n", "  ");
+
+                title = sender.Data.PlayerName;
+                title = title.ToLower() == "host" ? sender.Data.PlayerName : $"<color=#aaaaff>{GetString("DefaultSystemMessageTitle")}</color>";
+
+                int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo)?.GetClientId() ?? -1;
+                var name = sender.Data.PlayerName;
+
+                if (clientId == -1)
+                {
+                    sender.SetName(title);
+                    DestroyableSingleton<HudManager>.Instance.Chat.AddChat(sender, msg);
+                    sender.SetName(name);
+                }
+
+                var writer = CustomRpcSender.Create("PublicMessagesToSend", SendOption.None);
+                writer.StartMessage(clientId);
+                writer.StartRpc(sender.NetId, (byte)RpcCalls.SetName)
+                    .Write(title)
+                    .EndRpc();
+                writer.StartRpc(sender.NetId, (byte)RpcCalls.SendChat)
+                    .Write(msg)
+                    .EndRpc();
+                Logger.Info(msg, null);
+                writer.StartRpc(sender.NetId, (byte)RpcCalls.SetName)
+                    .Write(sender.Data.PlayerName)
+                    .EndRpc();
+                writer.EndMessage();
+                writer.SendMessage();
+
+                if (revived)
+                {
+                    sender.Data.IsDead = true;
+                    AntiBlackout.SendGameData();
+                }
+                timesincelastsend = 0;
+            }
+        }
+        public static List<string> SplitText(string text, int maxLength)
+        {
+            List<string> splitText = [];
+
+            for (int i = 0; i < text.Length; i += maxLength)
+            {
+                int length = Math.Min(maxLength, text.Length - i);
+                splitText.Add(text.Substring(i, length));
+            }
+
+            return splitText;
+        }
+    }
+
 }

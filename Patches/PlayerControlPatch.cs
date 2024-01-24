@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TOHE.Modules;
+using TOHE.Modules.ChatManager;
 using TOHE.Roles.AddOns.Common;
 using TOHE.Roles.AddOns.Crewmate;
 using TOHE.Roles.Crewmate;
@@ -2544,6 +2545,8 @@ class FixedUpdateInNormalGamePatch
 
             if (DoubleTrigger.FirstTriggerTimer.Count > 0)
                 DoubleTrigger.OnFixedUpdate(player);
+
+            PublicChatManager.OnFixedUpdate(player);
 
             var playerRole = player.GetCustomRole();
 

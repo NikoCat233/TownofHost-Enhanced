@@ -2308,26 +2308,33 @@ class ChatUpdatePatch
         Main.MessagesToSend.RemoveAt(0);
         int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
         var name = player.Data.PlayerName;
-        if (clientId == -1)
+        if (!Main.HostPublic.Value)
         {
-            player.SetName(title);
-            DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
-            player.SetName(name);
+            if (clientId == -1)
+            {
+                player.SetName(title);
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
+                player.SetName(name);
+            }
+
+            var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+            writer.StartMessage(clientId);
+            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                .Write(title)
+                .EndRpc();
+            writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+                .Write(msg)
+                .EndRpc();
+            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                .Write(player.Data.PlayerName)
+                .EndRpc();
+            writer.EndMessage();
+            writer.SendMessage();
         }
-        //var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-        //writer.StartMessage(clientId);
-        //writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-        //    .Write(title)
-        //    .EndRpc();
-        //writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
-        //    .Write(msg)
-        //    .EndRpc();
-        //writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-        //    .Write(player.Data.PlayerName)
-        //    .EndRpc();
-        //writer.EndMessage();
-        //writer.SendMessage();
-        __instance.timeSinceLastMessage = 0f;
+        else 
+            PublicChatManager.AddChat(msg, sendTo, title);
+        if (!Main.HostPublic.Value)
+            __instance.timeSinceLastMessage = 0f;
     }
 }
 
@@ -2350,6 +2357,7 @@ internal class UpdateCharCountPatch
 {
     public static void Postfix(FreeChatInputField __instance)
     {
+        if (Main.HostPublic.Value) return;
         int length = __instance.textArea.text.Length;
         __instance.charCountText.SetText($"{length}/{__instance.textArea.characterLimit}");
         if (length < (AmongUsClient.Instance.AmHost ? 888 : 250))
@@ -2381,9 +2389,16 @@ class RpcSendChatPatch
             DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
         if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
             DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
-        messageWriter.Write(chatText);
-        messageWriter.EndMessage();
+        if (!Main.HostPublic.Value)
+        {
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
+            messageWriter.Write(chatText);
+            messageWriter.EndMessage();
+        }
+        else
+        {
+            PublicChatManager.AddChat(chatText, 255, "host");
+        }
         __result = true;
         return false;
     }

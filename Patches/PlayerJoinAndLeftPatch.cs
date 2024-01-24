@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TOHE.Modules;
+using TOHE.Modules.ChatManager;
 using TOHE.Patches;
 using TOHE.Roles.Crewmate;
 using TOHE.Roles.Neutral;
@@ -315,19 +316,26 @@ class OnPlayerLeftPatch
                 //On Become Host is called before OnPlayerLeft, so this is safe to use
                 if (AmongUsClient.Instance.AmHost)
                 {
-                    var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-                    writer.StartMessage(clientId);
-                    writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                        .Write(title)
-                        .EndRpc();
-                    writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
-                        .Write(msg)
-                        .EndRpc();
-                    writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                        .Write(player.Data.PlayerName)
-                        .EndRpc();
-                    writer.EndMessage();
-                    writer.SendMessage();
+                    if (!Main.HostPublic.Value)
+                    {
+                        var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                        writer.StartMessage(clientId);
+                        writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                            .Write(title)
+                            .EndRpc();
+                        writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+                            .Write(msg)
+                            .EndRpc();
+                        writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                            .Write(player.Data.PlayerName)
+                            .EndRpc();
+                        writer.EndMessage();
+                        writer.SendMessage();
+                    }
+                    else
+                    {
+                        PublicChatManager.AddChat(msg, 255, title);
+                    }
                 }
                 Main.HostClientId = AmongUsClient.Instance.HostId;
                 //We won;t notify vanilla players for host's quit bcz niko dont know how to prevent message spamming
