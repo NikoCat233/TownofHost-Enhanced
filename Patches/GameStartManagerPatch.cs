@@ -237,7 +237,7 @@ public class GameStartManagerPatch
             if (!Main.playerVersion.TryGetValue(clientId, out var version)) return acceptVanilla;
             return Main.ForkId == version.forkId
                 && Main.version.CompareTo(version.version) == 0
-                && version.tag == $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})";
+                && version.tag == $"e11638b0(main)";
         }
     }
     [HarmonyPatch(typeof(TextBoxTMP), nameof(TextBoxTMP.SetText))]
