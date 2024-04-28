@@ -163,9 +163,18 @@ internal class EAC
                     break;
                 case RpcCalls.MurderPlayer:
                     //Calls will only be sent by host(under protocol) / server(vanilla)
-                    Report(pc, "Directly Murder Player");
-                    HandleCheat(pc, "Directly Murder Player");
-                    Logger.Fatal($"玩家【{pc.GetClientId()}:{pc.GetRealName()}】直接击杀，已驳回", "EAC");
+                    if (GameStates.IsLobby)
+                    {
+                        Report(pc, "Directly Murder Player In Lobby");
+                        HandleCheat(pc, "Directly Murder Player In Lobby");
+                        Logger.Fatal($"玩家【{pc.GetClientId()}:{pc.GetRealName()}】大厅直接击杀，已驳回", "EAC");
+                    }
+                    if (Main.UseVersionProtocol.Value)
+                    {
+                        Report(pc, "Directly Murder Player");
+                        HandleCheat(pc, "Directly Murder Player");
+                        Logger.Fatal($"玩家【{pc.GetClientId()}:{pc.GetRealName()}】直接击杀，已驳回", "EAC");
+                    }
                     return true;
                 case RpcCalls.CheckShapeshift:
                     if (GameStates.IsLobby)

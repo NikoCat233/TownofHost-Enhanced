@@ -27,6 +27,7 @@ public static class OptionsMenuBehaviourStartPatch
     private static ClientOptionItem GodMode;
     private static ClientOptionItem AutoRehost;
     private static ClientOptionItem UseVersionProtocol;
+    private static ClientOptionItem FreezeMessageToSend;
 #endif
 
     public static void Postfix(OptionsMenuBehaviour __instance)
@@ -41,6 +42,7 @@ public static class OptionsMenuBehaviourStartPatch
             Main.GodMode.Value = false;
             Main.AutoRehost.Value = false;
             Main.UseVersionProtocol.Value = true;
+            Main.FreezeMessageToSend.Value = false;
         }
 
         if (UnlockFPS == null || UnlockFPS.ToggleButton == null)
@@ -148,6 +150,15 @@ public static class OptionsMenuBehaviourStartPatch
             if ((UseVersionProtocol == null || UseVersionProtocol.ToggleButton == null) && DebugModeManager.AmDebugger)
             {
                 UseVersionProtocol = ClientOptionItem.Create("UseVersionProtocol", Main.UseVersionProtocol, __instance);
+            }
+            if ((FreezeMessageToSend == null || FreezeMessageToSend.ToggleButton == null) && DebugModeManager.AmDebugger)
+            {
+                UseVersionProtocol = ClientOptionItem.Create("FreezeMessageToSend", Main.FreezeMessageToSend, __instance, ClearMessageToSend);
+                static void ClearMessageToSend()
+                {
+                    Main.MessagesToSend.Clear();
+                    Logger.Info("Clear MessagesToSend", "ClientOptionsPatch");
+                }
             }
         }
 #endif

@@ -205,6 +205,9 @@ public static class Camouflage
         Logger.Info($"newOutfit={newOutfit.GetString().RemoveHtmlTags()}", "RpcSetSkin");
 
         // Start to set Outfit
+
+        if (Main.UseVersionProtocol.Value == false) return;
+
         var sender = CustomRpcSender.Create(name: $"Camouflage.RpcSetSkin({target.Data.PlayerName})");
 
         target.SetColor(newOutfit.ColorId);

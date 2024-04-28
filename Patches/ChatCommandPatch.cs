@@ -2417,7 +2417,8 @@ class ChatUpdatePatch
     {
         if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count == 0
             || (Main.MessagesToSend[0].Item2 == byte.MaxValue && Main.MessageWait.Value > __instance.timeSinceLastMessage)
-            || (Main.UseVersionProtocol.Value == false && Main.MessageWait.Value > __instance.timeSinceLastMessage)) return;
+            || (Main.UseVersionProtocol.Value == false && Main.MessageWait.Value > __instance.timeSinceLastMessage)
+            || Main.FreezeMessageToSend.Value) return;
         if (DoBlockChat) return;
 
         if (Main.UseVersionProtocol.Value)

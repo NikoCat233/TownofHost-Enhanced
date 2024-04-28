@@ -102,6 +102,7 @@ public class Main : BasePlugin
     public static ConfigEntry<bool> GodMode { get; private set; }
     public static ConfigEntry<bool> AutoRehost { get; private set; }
     public static ConfigEntry<bool> UseVersionProtocol { get; private set; }
+    public static ConfigEntry<bool> FreezeMessageToSend { get; private set; }
 
     public static Dictionary<int, PlayerVersion> playerVersion = [];
     //Preset Name Options
@@ -469,6 +470,7 @@ public class Main : BasePlugin
         GodMode = Config.Bind("Client Options", "GodMode", false);
         AutoRehost = Config.Bind("Client Options", "AutoRehost", false);
         UseVersionProtocol = Config.Bind("Client Options", "UseVersionProtocol", true);
+        FreezeMessageToSend = Config.Bind("Client Options", "FreezeMessageToSend", false);
 
         UseVersionProtocol.Value = true;
 
