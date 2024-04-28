@@ -168,14 +168,16 @@ internal class EAC
                         Report(pc, "Directly Murder Player In Lobby");
                         HandleCheat(pc, "Directly Murder Player In Lobby");
                         Logger.Fatal($"玩家【{pc.GetClientId()}:{pc.GetRealName()}】大厅直接击杀，已驳回", "EAC");
+                        return true;
                     }
                     if (Main.UseVersionProtocol.Value)
                     {
                         Report(pc, "Directly Murder Player");
                         HandleCheat(pc, "Directly Murder Player");
                         Logger.Fatal($"玩家【{pc.GetClientId()}:{pc.GetRealName()}】直接击杀，已驳回", "EAC");
+                        return true;
                     }
-                    return true;
+                    break;
                 case RpcCalls.CheckShapeshift:
                     if (GameStates.IsLobby)
                     {
