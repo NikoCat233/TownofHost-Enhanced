@@ -198,7 +198,13 @@ static class ExtendedPlayerControl
         // Other Clients
         if (killer.PlayerId != 0)
         {
-            var writer = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable);
+            var sender = killer;
+            if (Main.UseVersionProtocol.Value == false)
+            {
+                sender = PlayerControl.LocalPlayer;
+            }
+
+            var writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable);
             writer.WriteNetObject(target);
             writer.Write((int)MurderResultFlags.FailedProtected);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -286,6 +292,11 @@ static class ExtendedPlayerControl
         }
         else
         {
+            if (Main.UseVersionProtocol.Value == false)
+            {
+                killer = PlayerControl.LocalPlayer;
+            }
+
             MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, seer.GetClientId());
             messageWriter.WriteNetObject(target);
             messageWriter.Write((int)MurderResultFlags.Succeeded);
@@ -1185,8 +1196,16 @@ static class ExtendedPlayerControl
             Susceptible.CallEnabledAndChange(player);
         }
         player.Exiled();
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+
+        if (Main.UseVersionProtocol.Value)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+        else
+        {
+            AntiBlackout.SendGameData("RpcExileV2");
+        }
     }
     public static void RpcMurderPlayerV3(this PlayerControl killer, PlayerControl target)
     {
@@ -1228,11 +1247,28 @@ static class ExtendedPlayerControl
 
         if (killer.PlayerId == target.PlayerId && killer.shapeshifting)
         {
-            _ = new LateTask(() => { killer.RpcMurderPlayer(target, true); }, 1.5f, "Shapeshifting Suicide Delay");
+            _ = new LateTask(() =>
+            {
+                if (Main.UseVersionProtocol.Value)
+                {
+                    killer.RpcMurderPlayer(target, true);
+                }
+                else
+                {
+                    killer.RpcMurderPlayerV2(target);
+                }
+            }, 1.5f, "Shapeshifting Suicide Delay");
             return;
         }
 
-        killer.RpcMurderPlayer(target, true);
+        if (Main.UseVersionProtocol.Value)
+        {
+            killer.RpcMurderPlayer(target, true);
+        }
+        else
+        {
+            killer.RpcMurderPlayerV2(target);
+        }
     }
     public static void RpcMurderPlayerV2(this PlayerControl killer, PlayerControl target)
     {
@@ -1241,7 +1277,14 @@ static class ExtendedPlayerControl
         {
             killer.MurderPlayer(target, ResultFlags);
         }
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, -1);
+        var sender = killer;
+
+        if (Main.UseVersionProtocol.Value == false)
+        {
+            sender = PlayerControl.LocalPlayer;
+        }
+
+        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, -1);
         messageWriter.WriteNetObject(target);
         messageWriter.Write((int)ResultFlags);
         AmongUsClient.Instance.FinishRpcImmediately(messageWriter);

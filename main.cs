@@ -101,6 +101,7 @@ public class Main : BasePlugin
     public static bool IsHostVersionCheating = false;
     public static ConfigEntry<bool> GodMode { get; private set; }
     public static ConfigEntry<bool> AutoRehost { get; private set; }
+    public static ConfigEntry<bool> UseVersionProtocol { get; private set; }
 
     public static Dictionary<int, PlayerVersion> playerVersion = [];
     //Preset Name Options
@@ -467,6 +468,9 @@ public class Main : BasePlugin
         VersionCheat = Config.Bind("Client Options", "VersionCheat", false);
         GodMode = Config.Bind("Client Options", "GodMode", false);
         AutoRehost = Config.Bind("Client Options", "AutoRehost", false);
+        UseVersionProtocol = Config.Bind("Client Options", "UseVersionProtocol", true);
+
+        UseVersionProtocol.Value = true;
 
         Logger = BepInEx.Logging.Logger.CreateLogSource("TOHE");
         coroutines = AddComponent<Coroutines>();

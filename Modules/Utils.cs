@@ -1683,6 +1683,20 @@ public static class Utils
         if (!logforChatManager)
             ChatManager.AddToHostMessage(text.RemoveHtmlTagsTemplate());
 
+        //if (Main.UseVersionProtocol.Value == false && sendTo == byte.MaxValue)
+        //{
+        //    var sender = PlayerControl.LocalPlayer;
+        //    var name = sender.Data.PlayerName;
+
+        //    if (text.Length > 100) return;
+
+        //    sender.RpcSetName(title);
+        //    sender.RpcSendChat(text.RemoveHtmlTagsTemplate());
+        //    sender.RpcSetName(name);
+
+        //    return;
+        //}
+
         Main.MessagesToSend.Add((text.RemoveHtmlTagsTemplate(), sendTo, title));
     }
     public static bool IsPlayerModerator(string friendCode)

@@ -442,6 +442,10 @@ internal class EAC
                 Report(pc, "AUM");
                 HandleCheat(pc, GetString("EAC.CheatDetected.EAC"));
                 return true;
+            case unchecked((byte)420):
+                Report(pc, "Sicko");
+                HandleCheat(pc, GetString("EAC.CheatDetected.EAC"));
+                return true;
         }
         return true;
     }
