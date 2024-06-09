@@ -27,7 +27,7 @@ public class ShowHostMeetingPatch
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
     [HarmonyPostfix]
 
-    public static void Setup(MeetingHud __instance)
+    public static void Setup_Postfix(MeetingHud __instance)
     {
         if (!GameStates.IsOnlineGame) return;
 
