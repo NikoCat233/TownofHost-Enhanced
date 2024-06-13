@@ -16,6 +16,7 @@ using TOHE.Roles.Impostor;
 using TOHE.Roles.Neutral;
 using TOHE.Roles.Core;
 using static TOHE.Translator;
+using static UnityEngine.GraphicsBuffer;
 
 namespace TOHE;
 
@@ -505,27 +506,16 @@ class RpcMurderPlayerPatch
         {
             __instance.MurderPlayer(target, murderResultFlags);
         }
-
-        if (Main.UseVersionProtocol.Value)
-        {
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
-            messageWriter.WriteNetObject(target);
-            messageWriter.Write((int)murderResultFlags);
-            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
-        }
-        else
-        {
-            var senderpc = PlayerControl.LocalPlayer;
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(senderpc.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
-            messageWriter.WriteNetObject(target);
-            messageWriter.Write((int)murderResultFlags);
-            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
-        }
+        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
+        messageWriter.WriteNetObject(target);
+        messageWriter.Write((int)murderResultFlags);
+        AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
 
         return false;
         // There is no need to include DecisionByHost. DecisionByHost will make client check protection locally and cause confusion.
     }
 }
+
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckShapeshift))]
 public static class CheckShapeshiftPatch
 {
@@ -680,7 +670,7 @@ class ReportDeadBodyPatch
             return false;
         }
 
-        Logger.Info($"{__instance.GetNameWithRole().RemoveHtmlTags()} => {target?.Object?.GetNameWithRole().RemoveHtmlTags() ?? "null"}", "ReportDeadBody");
+        Logger.Info($"{__instance.GetNameWithRole().RemoveHtmlTags()} => {target?.PlayerName ?? "null (Button Pressed)"}", "ReportDeadBody");
 
         foreach (var kvp in Main.PlayerStates)
         {
@@ -806,15 +796,18 @@ class ReportDeadBodyPatch
         // Hereinafter, it is assumed that the button is confirmed to be pressed
         //=============================================
 
+        Main.MeetingIsStarted = true;
         Main.LastVotedPlayerInfo = null;
         Main.GuesserGuessed.Clear();
         Main.AllKillers.Clear();
 
-
+        Logger.Info($"target is null? - {target == null}", "AfterReportTasks");
+        Logger.Info($"target.Object is null? - {target?.Object == null}", "AfterReportTasks");
+        Logger.Info($"target.PlayerId is - {target?.PlayerId}", "AfterReportTasks");
 
         foreach (var playerStates in Main.PlayerStates.Values.ToArray())
         {
-            playerStates.RoleClass?.OnReportDeadBody(player, target?.Object);
+            playerStates.RoleClass?.OnReportDeadBody(player, target);
         }
 
         // Alchemist & Bloodlust
@@ -822,7 +815,7 @@ class ReportDeadBodyPatch
 
         if (Aware.IsEnable) Aware.OnReportDeadBody();
         
-        Sleuth.OnReportDeadBody(player, target?.Object);
+        Sleuth.OnReportDeadBody(player, target);
 
 
 
@@ -1109,8 +1102,8 @@ class FixedUpdateInNormalGamePatch
                 {
                     if (Main.ForkId != ver.forkId) // フォークIDが違う場合
                         __instance.cosmetics.nameText.text = $"<color=#ff0000><size=1.2>{ver.forkId}</size>\n{__instance?.name}</color>";
-                    else if (Main.FakeVersion.CompareTo(ver.version) == 0)
-                        __instance.cosmetics.nameText.text = ver.tag == Main.FakeGitInfo ? $"<color=#87cefa>{__instance.name}</color>" : $"<color=#ffff00><size=1.2>{ver.tag}</size>\n{__instance?.name}</color>";
+                    else if (Main.version.CompareTo(ver.version) == 0)
+                        __instance.cosmetics.nameText.text = ver.tag == $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})" ? $"<color=#87cefa>{__instance.name}</color>" : $"<color=#ffff00><size=1.2>{ver.tag}</size>\n{__instance?.name}</color>";
                     else __instance.cosmetics.nameText.text = $"<color=#ff0000><size=1.2>v{ver.version}</size>\n{__instance?.name}</color>";
                 }
                 else __instance.cosmetics.nameText.text = __instance?.Data?.PlayerName;
@@ -1311,28 +1304,7 @@ class PlayerStartPatch
         roleText.enabled = false;
     }
 }
-[HarmonyPatch(typeof(Vent), nameof(Vent.EnterVent))]
-class EnterVentPatch
-{
-    public static void Postfix(Vent __instance, [HarmonyArgument(0)] PlayerControl pc)
-    {
-        if (GameStates.IsHideNSeek) return;
-
-        Main.LastEnteredVent.Remove(pc.PlayerId);
-        Main.LastEnteredVent.Add(pc.PlayerId, __instance);
-        Main.LastEnteredVentLocation.Remove(pc.PlayerId);
-        Main.LastEnteredVentLocation.Add(pc.PlayerId, pc.GetCustomPosition());
-
-        if (!AmongUsClient.Instance.AmHost) return;
-
-        pc.GetRoleClass()?.OnEnterVent(pc, __instance);
-
-        if (pc.Is(CustomRoles.Unlucky))
-        {
-            Unlucky.SuicideRand(pc, Unlucky.StateSuicide.EnterVent);
-        }
-    }
-}
+// Player press vent button
 [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoEnterVent))]
 class CoEnterVentPatch
 {
@@ -1360,13 +1332,44 @@ class CoEnterVentPatch
             || (playerRoleClass != null && playerRoleClass.CheckBootFromVent(__instance, id))
         )
         {
-            __instance?.RpcBootFromVent(id);
-            return false;
+            try
+            {
+                __instance?.RpcBootFromVent(id);
+                return false;
+            }
+            catch
+            {
+                _ = new LateTask(() => __instance?.RpcBootFromVent(id), 0.5f, "Prevent Enter Vents");
+                return false;
+            }
         }
 
         playerRoleClass?.OnCoEnterVent(__instance, id);
 
         return true;
+    }
+}
+// Player entered in vent
+[HarmonyPatch(typeof(Vent), nameof(Vent.EnterVent))]
+class EnterVentPatch
+{
+    public static void Postfix(Vent __instance, [HarmonyArgument(0)] PlayerControl pc)
+    {
+        if (GameStates.IsHideNSeek) return;
+
+        Main.LastEnteredVent.Remove(pc.PlayerId);
+        Main.LastEnteredVent.Add(pc.PlayerId, __instance);
+        Main.LastEnteredVentLocation.Remove(pc.PlayerId);
+        Main.LastEnteredVentLocation.Add(pc.PlayerId, pc.GetCustomPosition());
+
+        if (!AmongUsClient.Instance.AmHost) return;
+
+        pc.GetRoleClass()?.OnEnterVent(pc, __instance);
+
+        if (pc.Is(CustomRoles.Unlucky))
+        {
+            Unlucky.SuicideRand(pc, Unlucky.StateSuicide.EnterVent);
+        }
     }
 }
 [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoExitVent))]
@@ -1375,6 +1378,7 @@ class CoExitVentPatch
     public static void Postfix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
     {
         if (GameStates.IsHideNSeek) return;
+        Logger.Info($" {__instance.myPlayer.GetNameWithRole().RemoveHtmlTags()}, Vent ID: {id}", "CoExitVent");
 
         var player = __instance.myPlayer;
         if (Options.CurrentGameMode == CustomGameMode.FFA && FFAManager.FFA_DisableVentingWhenKCDIsUp.GetBool())
@@ -1544,9 +1548,30 @@ public static class PlayerControlDiePatch
     {
         if (!AmongUsClient.Instance.AmHost) return;
 
-        if (GameStates.IsNormalGame)
+        try
         {
-            CustomRoleManager.AllEnabledRoles.Do(x => x.OnOtherTargetsReducedToAtoms(__instance));
+            if (GameStates.IsNormalGame && GameStates.IsInGame && !GameEndCheckerForNormal.ForEndGame)
+            {
+                CustomRoleManager.AllEnabledRoles.Do(x => x.OnOtherTargetsReducedToAtoms(__instance));
+
+                var playerclass = __instance.GetRoleClass();
+
+                Action<bool> SelfExile = Utils.LateExileTask.FirstOrDefault(x => x.Target is RoleBase rb && rb._state.PlayerId == __instance.PlayerId) ?? playerclass.OnSelfReducedToAtoms;
+                if (GameStates.IsInTask)
+                {
+                    SelfExile(false);
+                    Utils.LateExileTask.RemoveWhere(x => x.Target is RoleBase rb && rb._state.PlayerId == __instance.PlayerId);
+                }
+                else
+                {
+                    Utils.LateExileTask.RemoveWhere(x => x.Target is RoleBase rb && rb._state.PlayerId == __instance.PlayerId);
+                    Utils.LateExileTask.Add(SelfExile);
+                }
+            }
+        }
+        catch (Exception exx)
+        {
+            Logger.Error($"Error after Targetreducedtoatoms: {exx}", "PlayerControl.Die");
         }
 
         __instance.RpcRemovePet();
@@ -1573,7 +1598,10 @@ class PlayerControlSetRolePatch
 
             try
             {
+               Action<bool> SelfExile = __instance.GetRoleClass().OnSelfReducedToAtoms;
                GhostRoleAssign.GhostAssignPatch(__instance); // Sets customrole ghost if succeed
+
+               if (target.GetCustomRole().IsGhostRole()) Utils.LateExileTask.Add(SelfExile);
             }
             catch (Exception error)
             {

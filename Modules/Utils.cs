@@ -1323,7 +1323,7 @@ public static class Utils
         }
         catch (Exception exx)
         {
-            Logger.Warn($"Error after try split the msg {text} at: {exx}", "Utils.SendMessage..SplitMessage");
+            Logger.Warn($"Error after try split the msg {text} at: {exx}", "Utils.SendMessage.SplitMessage");
         }
 
         // set replay to true when you want to send previous sys msg or do not want to add a sys msg in the history
@@ -1804,7 +1804,6 @@ public static class Utils
                 if (NameNotifyManager.GetNameNotify(seer, out var name))
                 {
                     SelfName = name;
-                    IsDisplayInfo = false;
                 }
 
                 if (Pelican.HasEnabled && Pelican.IsEaten(seer.PlayerId))
@@ -1825,6 +1824,8 @@ public static class Utils
                 if (!CamouflageIsForMeeting && Camouflage.IsCamouflage)
                     SelfName = $"<size=0%>{SelfName}</size>";
 
+                if (!SelfName.Contains(seer.GetRealName()))
+                    IsDisplayInfo = false;
 
                 switch (Options.CurrentGameMode)
                 {
@@ -2092,6 +2093,7 @@ public static class Utils
             _ => true,
         };
     }
+    public static HashSet<Action<bool>> LateExileTask = [];
     public static void AfterMeetingTasks()
     {
         ChatManager.ClearLastSysMsg();
@@ -2104,6 +2106,12 @@ public static class Utils
         foreach (var playerState in Main.PlayerStates.Values.ToArray())
         {
             playerState.RoleClass?.AfterMeetingTasks();
+        }
+
+        if (LateExileTask.Any())
+        {
+            LateExileTask.Do(t => t.Invoke(true));
+            LateExileTask.Clear();
         }
 
 

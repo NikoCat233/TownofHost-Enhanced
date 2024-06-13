@@ -55,19 +55,31 @@ internal class Mini : RoleBase
         Age = 0;
         misguessed = false;
 
-        var rand = new Random();
-        IsEvilMini = CanBeEvil.GetBool() && (rand.Next(0, 100) < EvilMiniSpawnChances.GetInt());
+        if (AmongUsClient.Instance.AmHost)
+        {
+            var rand = IRandom.Instance;
+            IsEvilMini = CanBeEvil.GetBool() && (rand.Next(0, 100) < EvilMiniSpawnChances.GetInt());
+        }
+    }
+    public override void Add(byte playerId)
+    {
+        if (AmongUsClient.Instance.AmHost)
+        {
+            SendRPC();
+        }
     }
     public void SendRPC()
     {
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SyncRoleSkill, SendOption.Reliable, -1);
         writer.WriteNetObject(_Player);
         writer.Write(Age);
+        writer.Write(IsEvilMini);
         AmongUsClient.Instance.FinishRpcImmediately(writer);
     }
     public override void ReceiveRPC(MessageReader reader, PlayerControl NaN)
     {
         Age = reader.ReadInt32();
+        IsEvilMini = reader.ReadBoolean();
     }
 
     public static bool CheckSpawnEvilMini() => IsEvilMini;
@@ -196,8 +208,8 @@ internal class Mini : RoleBase
         }
     }
 
-    public override bool OthersKnowTargetRoleColor(PlayerControl seer, PlayerControl target)
-        => (target.Is(CustomRoles.NiceMini) || target.Is(CustomRoles.EvilMini)) && EveryoneCanKnowMini.GetBool();
+    //public override bool OthersKnowTargetRoleColor(PlayerControl seer, PlayerControl target)
+    //    => (target.Is(CustomRoles.NiceMini) || target.Is(CustomRoles.EvilMini)) && EveryoneCanKnowMini.GetBool();
 
     //public override string PlayerKnowTargetColor(PlayerControl seer, PlayerControl target)
     //    => (target.Is(CustomRoles.NiceMini) || target.Is(CustomRoles.EvilMini)) && EveryoneCanKnowMini.GetBool() ? Main.roleColors[CustomRoles.Mini] : string.Empty;

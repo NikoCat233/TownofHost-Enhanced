@@ -200,13 +200,7 @@ static class ExtendedPlayerControl
         // Other Clients
         if (!killer.OwnedByHost())
         {
-            var sender = killer;
-            if (!Main.UseVersionProtocol.Value)
-            {
-                sender = PlayerControl.LocalPlayer;
-            }
-
-            var writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable);
+            var writer = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable);
             writer.WriteNetObject(target);
             writer.Write((int)MurderResultFlags.FailedProtected);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -390,11 +384,6 @@ static class ExtendedPlayerControl
         }
         else
         {
-            if (!Main.UseVersionProtocol.Value)
-            {
-                killer = PlayerControl.LocalPlayer;
-            }
-
             MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, seer.GetClientId());
             messageWriter.WriteNetObject(target);
             messageWriter.Write((int)MurderResultFlags.Succeeded);
@@ -712,15 +701,8 @@ static class ExtendedPlayerControl
         }
         player.Exiled();
 
-        if (Main.UseVersionProtocol.Value)
-        {
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
-        else
-        {
-            AntiBlackout.SendGameData("RpcExileV2");
-        }
+        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+        AmongUsClient.Instance.FinishRpcImmediately(writer);
     }
     /// <summary>
     /// ONLY to be used when killer surely may kill the target, please check with killer.RpcCheckAndMurder(target, check: true) for indirect kill.
@@ -1025,6 +1007,14 @@ static class ExtendedPlayerControl
         Logger.Info($" {vent.transform.position}", "RpcVentTeleportPosition");
         player.RpcTeleport(new Vector2(vent.transform.position.x, vent.transform.position.y + 0.3636f));
     }
+    public static int GetPlayerVentId(this PlayerControl player)
+    {
+        if (!(ShipStatus.Instance.Systems.TryGetValue(SystemTypes.Ventilation, out var systemType) &&
+              systemType.TryCast<VentilationSystem>() is VentilationSystem ventilationSystem))
+            return 99;
+
+        return ventilationSystem.PlayersInsideVents.TryGetValue(player.PlayerId, out var playerIdVentId) ? playerIdVentId : 99;
+    }
     public static string GetRoleInfo(this PlayerControl player, bool InfoLong = false)
     {
         var role = player.GetCustomRole();
@@ -1054,7 +1044,7 @@ static class ExtendedPlayerControl
     }
     public static PlayerControl GetRealKiller(this PlayerControl target)
     {
-        var killerId = Main.PlayerStates[target.PlayerId].GetRealKiller();
+        var killerId = Main.PlayerStates[target.Data.PlayerId].GetRealKiller();
         return killerId == byte.MaxValue ? null : Utils.GetPlayerById(killerId);
     }
     public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)
@@ -1091,11 +1081,6 @@ static class ExtendedPlayerControl
         {
             return false;
         }
-        
-        // If doppelganger appears as player return true
-        // Note: Needs to be tested for any buggy outcomes.
-        if (Doppelganger.CheckDoppelVictim(target.PlayerId) && target.PlayerId == Doppelganger.CurrentIdToSwap)
-            return true;
 
         //if the target status is alive
         return !Main.PlayerStates.TryGetValue(target.PlayerId, out var playerState) || !playerState.IsDead;

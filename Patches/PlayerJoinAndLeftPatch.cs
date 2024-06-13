@@ -10,6 +10,7 @@ using TOHE.Roles.Crewmate;
 using TOHE.Roles.Core.AssignManager;
 using static TOHE.Translator;
 using static TOHE.SelectRolesPatch;
+using TOHE.Roles.Core;
 
 namespace TOHE;
 
@@ -32,7 +33,6 @@ class OnGameJoinedPatch
         ChatUpdatePatch.DoBlockChat = false;
         GameStates.InGame = false;
         ErrorText.Instance.Clear();
-        Main.MessagesToSend.Clear();
         EAC.Init();
         OnPlayerJoinedPatch.realClientName = [];
 
@@ -342,6 +342,9 @@ class OnPlayerLeftPatch
 
             if (GameStates.IsNormalGame && GameStates.IsInGame)
             {
+
+                CustomRoleManager.AllEnabledRoles.ForEach(r => r.OnOtherTargetsReducedToAtoms(data.Character));
+
                 if (data.Character.Is(CustomRoles.Lovers) && !data.Character.Data.IsDead)
                 {
                     foreach (var lovers in Main.LoversPlayers.ToArray())
@@ -564,13 +567,10 @@ class CreatePlayerPatch
                         // Only for vanilla
                         if (!client.Character.OwnedByHost() && !client.Character.IsModClient())
                         {
-                            if (Main.UseVersionProtocol.Value)
-                            {
-                                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(LobbyBehaviour.Instance.NetId, (byte)RpcCalls.LobbyTimeExpiring, SendOption.None, client.Id);
-                                writer.WritePacked((int)GameStartManagerPatch.timer);
-                                writer.Write(false);
-                                AmongUsClient.Instance.FinishRpcImmediately(writer);
-                            }
+                            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(LobbyBehaviour.Instance.NetId, (byte)RpcCalls.LobbyTimeExpiring, SendOption.None, client.Id);
+                            writer.WritePacked((int)GameStartManagerPatch.timer);
+                            writer.Write(false);
+                            AmongUsClient.Instance.FinishRpcImmediately(writer);
                         }
                         // Non-host modded client
                         else if (!client.Character.OwnedByHost() && client.Character.IsModClient())
