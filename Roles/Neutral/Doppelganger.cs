@@ -21,7 +21,7 @@ internal class Doppelganger : RoleBase
 
     public static readonly Dictionary<byte, string> DoppelVictim = [];
     public static readonly Dictionary<PlayerControl, byte> PlayerControllerToIDRam = []; // Edit ids!
-    public static readonly Dictionary<byte, GameData.PlayerOutfit> DoppelPresentSkin = []; // Don't edit ids!
+    public static readonly Dictionary<byte, GameData.PlayerOutfit> DoppelPresentSkin = [];
     public static readonly Dictionary<byte, string> TrueNames = []; // Don't edit ids!
     public static PlayerControl DoppelgangerTarget = null;
     public static byte CurrentIdToSwap = byte.MaxValue;
@@ -30,10 +30,11 @@ internal class Doppelganger : RoleBase
     {
         SetupSingleRoleOptions(Id, TabGroup.NeutralRoles, CustomRoles.Doppelganger, 1, zeroOne: false);
         MaxSteals = IntegerOptionItem.Create(Id + 10, "DoppelMaxSteals", new(1, 14, 1), 9, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
-        KillCooldown = FloatOptionItem.Create(Id + 11, "KillCooldown", new(0f, 180f, 2.5f), 20f, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger])
+        CurrentVictimCanSeeRolesAsDead = BooleanOptionItem.Create(Id + 11, "DoppelCurrentVictimCanSeeRolesAsDead", false, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
+        KillCooldown = FloatOptionItem.Create(Id + 12, "KillCooldown", new(0f, 180f, 2.5f), 20f, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger])
             .SetValueFormat(OptionFormat.Seconds);
-        CanVent = BooleanOptionItem.Create(Id + 12, "CanVent", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
-        HasImpostorVision = BooleanOptionItem.Create(Id + 13, "ImpostorVision", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
+        CanVent = BooleanOptionItem.Create(Id + 13, "CanVent", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
+        HasImpostorVision = BooleanOptionItem.Create(Id + 14, "ImpostorVision", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
     }
 
     public override void Init()
@@ -56,7 +57,6 @@ internal class Doppelganger : RoleBase
         foreach (PlayerControl allPlayers in Main.AllPlayerControls)
         {
             PlayerControllerToIDRam[allPlayers] = allPlayers.PlayerId;
-            DoppelPresentSkin[allPlayers.PlayerId] = allPlayers.CurrentOutfit;
         }
 
         DoppelgangerTarget = Utils.GetPlayerById(playerId);
@@ -204,6 +204,8 @@ internal class Doppelganger : RoleBase
             .EndRpc();
 
         sender.SendMessage();
+
+        DoppelPresentSkin[pc.PlayerId] = new GameData.PlayerOutfit().Set(newOutfit.PlayerName, newOutfit.ColorId, newOutfit.HatId, newOutfit.SkinId, newOutfit.VisorId, newOutfit.PetId, newOutfit.NamePlateId);
     }
 
     public override string GetProgressText(byte playerId, bool cooms) => Utils.ColorString(AbilityLimit > 0 ? Utils.GetRoleColor(CustomRoles.Doppelganger).ShadeColor(0.25f) : Color.gray, $"({AbilityLimit})");

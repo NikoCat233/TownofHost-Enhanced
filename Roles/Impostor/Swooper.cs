@@ -114,7 +114,7 @@ internal class Swooper : RoleBase
                     swooper.Notify(GetString("SwooperInvisInCooldown"));
                 }
             }
-        }, 0.5f, "Swooper Vent");
+        }, 0.8f, "Swooper Vent");
     }
 
     public override void OnFixedUpdateLowLoad(PlayerControl player)
@@ -169,7 +169,7 @@ internal class Swooper : RoleBase
         return false;
     }
 
-    public override void OnReportDeadBody(PlayerControl reporter, PlayerControl target)
+    public override void OnReportDeadBody(PlayerControl reporter, GameData.PlayerInfo target)
     {
         InvisCooldown.Clear();
         InvisDuration.Clear();

@@ -10,6 +10,7 @@ using TOHE.Roles.Crewmate;
 using TOHE.Roles.Core.AssignManager;
 using static TOHE.Translator;
 using static TOHE.SelectRolesPatch;
+using TOHE.Roles.Core;
 
 namespace TOHE;
 
@@ -304,6 +305,11 @@ class OnPlayerLeftPatch
 {
     static void Prefix([HarmonyArgument(0)] ClientData data)
     {
+        if (GameStates.IsInGame)
+        {
+            Main.PlayerStates[data.Character.PlayerId].Disconnected = true;
+        }
+
         if (!AmongUsClient.Instance.AmHost) return;
 
         if (Main.AssignRolesIsStarted)
@@ -337,6 +343,9 @@ class OnPlayerLeftPatch
 
             if (GameStates.IsNormalGame && GameStates.IsInGame)
             {
+
+                CustomRoleManager.AllEnabledRoles.ForEach(r => r.OnOtherTargetsReducedToAtoms(data.Character));
+
                 if (data.Character.Is(CustomRoles.Lovers) && !data.Character.Data.IsDead)
                 {
                     foreach (var lovers in Main.LoversPlayers.ToArray())

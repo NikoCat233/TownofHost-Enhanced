@@ -165,11 +165,16 @@ internal class RPCHandlerPatch
                 var role = (RoleTypes)subReader.ReadUInt16();
                 Logger.Info("RPC Set Role For Player: " + __instance.GetRealName() + " => " + role, "SetRole");
                 break;
-            case RpcCalls.SendChat:
+            case RpcCalls.SendChat: // Free chat
                 var text = subReader.ReadString();
                 Logger.Info($"{__instance.GetNameWithRole().RemoveHtmlTags()}:{text.RemoveHtmlTags()}", "ReceiveChat");
                 ChatCommands.OnReceiveChat(__instance, text, out var canceled);
                 if (canceled) return false;
+                break;
+            case RpcCalls.SendQuickChat:
+                Logger.Info($"{__instance.GetNameWithRole().RemoveHtmlTags()}:Some message from quick chat", "ReceiveChat");
+                ChatCommands.OnReceiveChat(__instance, "Some message from quick chat", out var canceledQuickChat);
+                if (canceledQuickChat) return false;
                 break;
             case RpcCalls.StartMeeting:
                 var p = Utils.GetPlayerById(subReader.ReadByte());
@@ -202,28 +207,28 @@ internal class RPCHandlerPatch
             case CustomRPC.AntiBlackout:
                 if (Options.EndWhenPlayerBug.GetBool())
                 {
-                    Logger.Fatal($"{__instance?.Data?.PlayerName}({__instance.PlayerId}): {reader.ReadString()} 错误，根据设定终止游戏", "Anti-black");
+                    Logger.Fatal($"{__instance?.Data?.PlayerName}({__instance.PlayerId}): Error: {reader.ReadString()} - end the game according to the setting", "Anti-black");
                     ChatUpdatePatch.DoBlockChat = true;
                     Main.OverrideWelcomeMsg = string.Format(GetString("RpcAntiBlackOutNotifyInLobby"), __instance?.Data?.PlayerName, GetString("EndWhenPlayerBug"));
                     _ = new LateTask(() =>
                     {
                         Logger.SendInGame(string.Format(GetString("RpcAntiBlackOutEndGame"), __instance?.Data?.PlayerName));
-                    }, 3f, "Anti-Black Msg SendInGame 1");
+                    }, 3f, "RPC Anti-Black Msg SendInGame Error During Loading");
 
                     _ = new LateTask(() =>
                     {
                         CustomWinnerHolder.ResetAndSetWinner(CustomWinner.Error);
                         GameManager.Instance.LogicFlow.CheckEndCriteria();
                         RPC.ForceEndGame(CustomWinner.Error);
-                    }, 5.5f, "Anti-Black End Game 1");
+                    }, 5.5f, "RPC Anti-Black End Game As Critical Error");
                 }
-                else if (GameStates.IsOnlineGame)
+                else
                 {
-                    Logger.Fatal($"{__instance?.Data?.PlayerName}({__instance.PlayerId}): Change Role Setting Postfix 错误，根据设定继续游戏", "Anti-black");
+                    Logger.Fatal($"{__instance?.Data?.PlayerName}({__instance.PlayerId}): Error: {reader.ReadString()} - continue the game according to the settings", "Anti-black");
                     _ = new LateTask(() =>
                     {
                         Logger.SendInGame(string.Format(GetString("RpcAntiBlackOutIgnored"), __instance?.Data?.PlayerName));
-                    }, 3f, "Anti-Black Msg SendInGame 2");
+                    }, 3f, "RPC Anti-Black Msg SendInGame Out Ignored");
                 }
                 break;
 
@@ -355,9 +360,6 @@ internal class RPCHandlerPatch
                 break;
             case CustomRPC.SyncPuppet:
                 Puppeteer.ReceiveRPC(reader);
-                break;
-            case CustomRPC.SyncKami:
-                Kamikaze.ReceiveRPC(reader);
                 break;
             case CustomRPC.SetKillOrSpell:
                 Witch.ReceiveRPC(reader, false);
@@ -890,7 +892,8 @@ internal static class RPC
 
         }
 
-        HudManager.Instance.SetHudActive(true);
+        if (!AmongUsClient.Instance.IsGameOver)
+            DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
         //    HudManager.Instance.Chat.SetVisible(true);
 
         if (PlayerControl.LocalPlayer.PlayerId == targetId) RemoveDisableDevicesPatch.UpdateDisableDevices();

@@ -745,10 +745,6 @@ static class ExtendedPlayerControl
         }
         switch (Addon)
         {
-            case CustomRoles.Unlucky:
-                Unlucky.Remove(Killed.PlayerId);
-                Unlucky.Add(target.PlayerId);
-                break;
             case CustomRoles.Tired:
                 Tired.Remove(Killed.PlayerId);
                 Tired.Add(target.PlayerId);
@@ -1025,6 +1021,14 @@ static class ExtendedPlayerControl
         Logger.Info($" {vent.transform.position}", "RpcVentTeleportPosition");
         player.RpcTeleport(new Vector2(vent.transform.position.x, vent.transform.position.y + 0.3636f));
     }
+    public static int GetPlayerVentId(this PlayerControl player)
+    {
+        if (!(ShipStatus.Instance.Systems.TryGetValue(SystemTypes.Ventilation, out var systemType) &&
+              systemType.TryCast<VentilationSystem>() is VentilationSystem ventilationSystem))
+            return 99;
+
+        return ventilationSystem.PlayersInsideVents.TryGetValue(player.PlayerId, out var playerIdVentId) ? playerIdVentId : 99;
+    }
     public static string GetRoleInfo(this PlayerControl player, bool InfoLong = false)
     {
         var role = player.GetCustomRole();
@@ -1054,7 +1058,7 @@ static class ExtendedPlayerControl
     }
     public static PlayerControl GetRealKiller(this PlayerControl target)
     {
-        var killerId = Main.PlayerStates[target.PlayerId].GetRealKiller();
+        var killerId = Main.PlayerStates[target.Data.PlayerId].GetRealKiller();
         return killerId == byte.MaxValue ? null : Utils.GetPlayerById(killerId);
     }
     public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)
@@ -1091,14 +1095,25 @@ static class ExtendedPlayerControl
         {
             return false;
         }
-        
-        // If doppelganger appears as player return true
-        // Note: Needs to be tested for any buggy outcomes.
-        if (Doppelganger.CheckDoppelVictim(target.PlayerId) && target.PlayerId == Doppelganger.CurrentIdToSwap)
-            return true;
 
         //if the target status is alive
         return !Main.PlayerStates.TryGetValue(target.PlayerId, out var playerState) || !playerState.IsDead;
+    }
+    public static bool IsDisconnected(this PlayerControl target)
+    {
+        //In lobby all not disconnected
+        if (GameStates.IsLobby && !GameStates.IsInGame)
+        {
+            return false;
+        }
+        //if target is null, is disconnected
+        if (target == null)
+        {
+            return true;
+        }
+
+        //if the target status is disconnected
+        return !Main.PlayerStates.TryGetValue(target.PlayerId, out var playerState) || playerState.Disconnected;
     }
     public static bool IsExiled(this PlayerControl target)
     {

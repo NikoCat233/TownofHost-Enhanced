@@ -64,6 +64,7 @@ internal class ChangeRoleSettings
             Main.ShapeshiftTarget.Clear();
             Main.AllKillers.Clear();
             Main.OverDeadPlayerList.Clear();
+            Utils.LateExileTask.Clear();
 
             Main.LastNotifyNames.Clear();
             Main.PlayerColors.Clear();
@@ -75,6 +76,7 @@ internal class ChangeRoleSettings
             Main.MeetingsPassed = 0;
             Main.MeetingIsStarted = false;
             Main.introDestroyed = false;
+            GameEndCheckerForNormal.ForEndGame = false;
             GameEndCheckerForNormal.ShowAllRolesWhenGameEnd = false;
 
             ChatManager.ResetHistory();
@@ -97,9 +99,11 @@ internal class ChangeRoleSettings
             // Clear last exiled
             ExileControllerWrapUpPatch.AntiBlackout_LastExiled = null;
 
-            //名前の記録
-            //Main.AllPlayerNames = [];
+            IRandom.SetInstanceById(Options.RoleAssigningAlgorithm.GetValue());
+
+            // Sync Player Names
             RPC.SyncAllPlayerNames();
+            //Main.AllPlayerNames = [];
 
             GhostRoleAssign.Init();
 
@@ -130,7 +134,7 @@ internal class ChangeRoleSettings
                 if (AmongUsClient.Instance.AmHost && Options.FormatNameMode.GetInt() == 1) pc.RpcSetName(Palette.GetColorName(colorId));
                 Main.PlayerStates[pc.PlayerId] = new(pc.PlayerId)
                 {
-                    NormalOutfit = new GameData.PlayerOutfit().Set(Main.AllPlayerNames[pc.PlayerId], pc.CurrentOutfit.ColorId, pc.CurrentOutfit.HatId, pc.CurrentOutfit.SkinId, pc.CurrentOutfit.VisorId, pc.CurrentOutfit.PetId, pc.CurrentOutfit.NamePlateId),
+                    NormalOutfit = new GameData.PlayerOutfit().Set(pc.GetRealName(clientData: true), pc.CurrentOutfit.ColorId, pc.CurrentOutfit.HatId, pc.CurrentOutfit.SkinId, pc.CurrentOutfit.VisorId, pc.CurrentOutfit.PetId, pc.CurrentOutfit.NamePlateId),
                 };
                 //Main.AllPlayerNames[pc.PlayerId] = pc?.Data?.PlayerName;
 
@@ -189,7 +193,6 @@ internal class ChangeRoleSettings
             Statue.Init();
             Ghoul.Init();
             Rainbow.Init();
-            Unlucky.Init();
 
             //FFA
             FFAManager.Init();
@@ -200,13 +203,8 @@ internal class ChangeRoleSettings
             AntiBlackout.Reset();
             NameNotifyManager.Reset();
 
-            // Block "RpcSetRole" for set desync roles for some players
-            RpcSetRoleReplacer.Initialize();
-
             SabotageSystemPatch.SabotageSystemTypeRepairDamagePatch.Initialize();
             DoorsReset.Initialize();
-
-            IRandom.SetInstanceById(Options.RoleAssigningAlgorithm.GetValue());
 
             MeetingStates.MeetingCalled = false;
             MeetingStates.FirstMeeting = true;
@@ -248,6 +246,9 @@ internal class SelectRolesPatch
 
         try
         {
+            // Block "RpcSetRole" for set desync roles for some players
+            RpcSetRoleReplacer.Initialize();
+
             // Set GM for Host
             if (Main.EnableGM.Value && Options.CurrentGameMode == CustomGameMode.Standard)
             {
@@ -476,9 +477,6 @@ internal class SelectRolesPatch
                         case CustomRoles.Antidote:
                             Antidote.Add();
                             break;
-                        case CustomRoles.Unlucky:
-                            Unlucky.Add(pc.PlayerId);
-                            break;
                         case CustomRoles.Burst:
                             Burst.Add();
                             break;
@@ -506,9 +504,10 @@ internal class SelectRolesPatch
 
             EndOfSelectRolePatch:
 
-            DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
+            if (!AmongUsClient.Instance.IsGameOver)
+                DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
             //HudManager.Instance.Chat.SetVisible(true);
-            
+
             foreach (var pc in Main.AllPlayerControls)
                 pc.ResetKillCooldown();
 

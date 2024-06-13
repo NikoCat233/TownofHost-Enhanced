@@ -117,8 +117,8 @@ internal class DollMaster : RoleBase
             _ = new LateTask(() =>
             {
                 if (!target.inVent || target.walkingToVent) return;
-                target.MyPhysics.RpcBootFromVent(GetPlayerVentId(target));
-            }, 0.25f, "Boot Possessed Player from vent: " + GetPlayerVentId(target));
+                target.MyPhysics.RpcBootFromVent(target.GetPlayerVentId());
+            }, 0.25f, "Boot Possessed Player from vent: " + target.GetPlayerVentId());
         }
     }
 
@@ -133,8 +133,8 @@ internal class DollMaster : RoleBase
                 _ = new LateTask(() =>
                 {
                     if (!pc.inVent || pc.walkingToVent || pc.MyPhysics.Animations.IsPlayingEnterVentAnimation()) return;
-                    pc.MyPhysics.RpcBootFromVent(GetPlayerVentId(pc));
-                }, 0.3f, "Boot DollMaster from vent: " + GetPlayerVentId(pc));
+                    pc.MyPhysics.RpcBootFromVent(pc.GetPlayerVentId());
+                }, 0.3f, "Boot DollMaster from vent: " + pc.GetPlayerVentId());
             }
 
             // Unpossessed after waiting for DollMaster.
@@ -151,18 +151,8 @@ internal class DollMaster : RoleBase
         }
     }
 
-    // Get vent Id that the player is in.
-    private static int GetPlayerVentId(PlayerControl pc)
-    {
-        if (!(ShipStatus.Instance.Systems.TryGetValue(SystemTypes.Ventilation, out var systemType) &&
-              systemType.TryCast<VentilationSystem>() is VentilationSystem ventilationSystem))
-            return 0;
-
-        return ventilationSystem.PlayersInsideVents.TryGetValue(pc.PlayerId, out var playerIdVentId) ? playerIdVentId : 0;
-    }
-
     // Prepare for a meeting if possessing.
-    public override void OnReportDeadBody(PlayerControl pc, PlayerControl target) // Fix crap when meeting gets called.
+    public override void OnReportDeadBody(PlayerControl pc, GameData.PlayerInfo target) // Fix crap when meeting gets called.
     {
         if (IsControllingPlayer && controllingTarget != null && DollMasterTarget != null)
         {
@@ -218,9 +208,11 @@ internal class DollMaster : RoleBase
     // Handle specific killing roles when interacting with a Dollmaster or Player while possessing.
     public override bool CheckMurderOnOthersTarget(PlayerControl killer, PlayerControl target)
     {
-        if (IsControllingPlayer)
+        if (IsControllingPlayer && DollMasterTarget != null && controllingTarget != null)
         {
             if (!CanKillerUseAbility(killer)) return true;
+
+            if (killer.GetCustomRole().IsImpostorTeam() && target == controllingTarget) return true;
 
             if (killer.Is(CustomRoles.Sheriff) && killer != DollMasterTarget && target == DollMasterTarget)
             {
