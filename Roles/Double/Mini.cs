@@ -188,9 +188,10 @@ internal class Mini : RoleBase
         return false;
     }
 
-    public override void CheckExile(GameData.PlayerInfo exiled, ref bool DecidedWinner, bool isMeetingHud, ref string name)
+    public override void CheckExile(NetworkedPlayerInfo exiled, ref bool DecidedWinner, bool isMeetingHud, ref string name)
     {
-        if (GetPlayerById(exiled.PlayerId).Is(CustomRoles.NiceMini) && Age < 18)
+        var mini = GetPlayerById(exiled.PlayerId);
+        if (mini != null && mini.Is(CustomRoles.NiceMini) && Age < 18)
         {
             if (!CustomWinnerHolder.CheckForConvertedWinner(exiled.PlayerId))
             {

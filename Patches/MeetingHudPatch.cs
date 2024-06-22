@@ -67,9 +67,10 @@ class CheckForEndVotingPatch
                     });
                     states = [.. statesList];
 
+                    ExileControllerWrapUpPatch.AntiBlackout_LastExiled = voteTarget.Data;
+
                     if (AntiBlackout.BlackOutIsActive)
                     {
-                        ExileControllerWrapUpPatch.AntiBlackout_LastExiled = voteTarget.Data;
                         //__instance.RpcVotingComplete(states, null, true);
 
                         // Need check BlackOutIsActive again
@@ -134,7 +135,7 @@ class CheckForEndVotingPatch
                 }
             }
 
-            GameData.PlayerInfo exiledPlayer = PlayerControl.LocalPlayer.Data;
+            NetworkedPlayerInfo exiledPlayer = PlayerControl.LocalPlayer.Data;
             bool tie = false;
 
             foreach (var ps in __instance.playerStates)
@@ -322,10 +323,11 @@ class CheckForEndVotingPatch
 
             exiledPlayer?.Object.SetRealKiller(null);
 
+            ExileControllerWrapUpPatch.AntiBlackout_LastExiled = exiledPlayer;
+
             //RPC
             if (AntiBlackout.BlackOutIsActive)
             {
-                ExileControllerWrapUpPatch.AntiBlackout_LastExiled = exiledPlayer;
                 //__instance.RpcVotingComplete(states, null, true);
 
                 // Need check BlackOutIsActive again
@@ -358,7 +360,7 @@ class CheckForEndVotingPatch
     }
 
     // 参考：https://github.com/music-discussion/TownOfHost-TheOtherRoles
-    private static void ConfirmEjections(GameData.PlayerInfo exiledPlayer, bool AntiBlackoutStore = false)
+    private static void ConfirmEjections(NetworkedPlayerInfo exiledPlayer, bool AntiBlackoutStore = false)
     {
         if (!AmongUsClient.Instance.AmHost) return;
         if (exiledPlayer == null) return;
@@ -469,7 +471,7 @@ class CheckForEndVotingPatch
                 Main.DoBlockNameChange = true;
                 if (GameStates.IsInGame)
                 {
-                    GameData.Instance.UpdateName(exiledPlayer.PlayerId, name, false);
+                    exiledPlayer.UpdateName(name, Utils.GetClientById(exiledPlayer.ClientId));
                     player?.RpcSetName(name);
                 }
             }
@@ -492,7 +494,7 @@ class CheckForEndVotingPatch
                 if (GameStates.IsInGame && player.Data.Disconnected)
                 {
                     player.Data.PlayerName = realName;
-                    GameData.Instance.UpdateName(exiledPlayer.PlayerId, realName, false);
+                    exiledPlayer.UpdateName(realName, Utils.GetClientById(exiledPlayer.ClientId));
                     //Await Next Send Data or Next Meeting
                 }
             }
@@ -591,7 +593,7 @@ class CheckForEndVotingPatch
         }
         if (TargetList == null || TargetList.Count == 0) return null;
         var rand = IRandom.Instance;
-        var target = TargetList[rand.Next(TargetList.Count)];
+        var target = TargetList.RandomElement();
         return target;
     }
 }
@@ -901,7 +903,7 @@ class MeetingHudStartPatch
             var roleTextMeeting = UnityEngine.Object.Instantiate(pva.NameText);
             roleTextMeeting.transform.SetParent(pva.NameText.transform);
             roleTextMeeting.transform.localPosition = new Vector3(0f, -0.18f, 0f);
-            roleTextMeeting.fontSize = 1.5f;
+            roleTextMeeting.fontSize = 1.6f;
             roleTextMeeting.text = RoleTextData.Item1;
             if (Main.VisibleTasksCount) roleTextMeeting.text += Utils.GetProgressText(pc);
             roleTextMeeting.color = RoleTextData.Item2;
@@ -1018,7 +1020,7 @@ class MeetingHudStartPatch
                 if (Options.CrewmatesCanGuess.GetBool() && seer.GetCustomRole().IsCrewmate() && !seer.Is(CustomRoles.Judge) && !seer.Is(CustomRoles.Lookout) && !seer.Is(CustomRoles.Swapper) && !seer.Is(CustomRoles.Inspector))
                     if (!seer.Data.IsDead && !target.Data.IsDead)
                         pva.NameText.text = Utils.ColorString(Utils.GetRoleColor(seer.GetCustomRole()), target.PlayerId.ToString()) + " " + pva.NameText.text;
-                if (Options.ImpostorsCanGuess.GetBool() && seer.GetCustomRole().IsImpostor() && !seer.Is(CustomRoles.Councillor))
+                if (Options.ImpostorsCanGuess.GetBool() && (seer.GetCustomRole().IsImpostor() || seer.GetCustomRole().IsMadmate()) && !seer.Is(CustomRoles.Councillor))
                     if (!seer.Data.IsDead && !target.Data.IsDead)
                         pva.NameText.text = Utils.ColorString(Utils.GetRoleColor(seer.GetCustomRole()), target.PlayerId.ToString()) + " " + pva.NameText.text;
                 if (Options.NeutralKillersCanGuess.GetBool() && seer.GetCustomRole().IsNK())

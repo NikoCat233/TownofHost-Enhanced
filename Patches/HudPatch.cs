@@ -42,14 +42,7 @@ class HudManagerPatch
                 player.Collider.offset = new Vector2(0f, -0.3636f);
             }
         }
-        if (GameStates.IsLobby)
-        {
-            var POM = GameObject.Find("PlayerOptionsMenu(Clone)");
-            __instance.GameSettings.text = POM != null ? "" : OptionShower.GetTextNoFresh(); //OptionShower.GetText();
-            __instance.GameSettings.fontSizeMin =
-            __instance.GameSettings.fontSizeMax = 1.1f;
-        }
-        //ゲーム中でなければ以下は実行されない
+
         if (!AmongUsClient.Instance.IsGameStarted || GameStates.IsHideNSeek) return;
 
         Utils.CountAlivePlayers();
@@ -238,8 +231,7 @@ class SetHudActivePatch
         // Fix vanilla bug when report button displayed in the lobby
         __instance.ReportButton.ToggleVisible(!GameStates.IsLobby && isActive);
 
-        if (!GameStates.IsModHost) return;
-        if (GameStates.IsHideNSeek) return;
+        if (!GameStates.IsModHost || GameStates.IsHideNSeek) return;
 
         IsActive = isActive;
 

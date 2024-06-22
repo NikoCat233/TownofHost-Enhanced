@@ -52,7 +52,7 @@ internal class Hawk : RoleBase
             }
         }
     }
-    public override void OnReportDeadBody(PlayerControl reporter, GameData.PlayerInfo target)
+    public override void OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
     {
         int ThisCount = 0;
         foreach (var pc in Main.AllPlayerControls)
@@ -81,9 +81,9 @@ internal class Hawk : RoleBase
 
         if (CheckRetriConflicts(target) && killer.RpcCheckAndMurder(target, true))
         {
+            target.SetDeathReason(PlayerState.DeathReason.Slice);
             killer.RpcMurderPlayer(target);
             killer.RpcResetAbilityCooldown();
-            target.SetDeathReason(PlayerState.DeathReason.Slice);
             AbilityLimit--;
             SendSkillRPC();
         }

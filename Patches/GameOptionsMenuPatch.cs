@@ -1,49 +1,125 @@
-using AmongUs.GameOptions;
+﻿using AmongUs.GameOptions;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Sentry.Internal;
+using Sentry.Internal.Extensions;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.TextCore;
 using static TOHE.Translator;
 using Object = UnityEngine.Object;
 
 namespace TOHE;
 
+//[HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.Start))]
+//[HarmonyPriority(Priority.First)]
+//class GameSettingMenuStartPatch
+//{
+//    public static void Postfix(GameSettingMenu __instance)
+//    {
+//        // Need for Hide&Seek because tabs are disabled by default
+//        // I dont know what this means..
+//        __instance.GameSettingsTab.gameObject.SetActive(true);
+//    }
+////}
+//[HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.Close))]
+//class GameSettingMenuClosePatch
+//{
+//    public static void Postfix()
+//    {
+//        // if custom game mode is HideNSeekTOHE in normal game, set standart
+//        if (GameStates.IsNormalGame && Options.CurrentGameMode == CustomGameMode.HidenSeekTOHE)
+//        {
+//            // Select standart custom game mode
+//            Options.GameMode.SetValue(0);
+//        }
+//    }
+//}
+
+
 [HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.Start))]
-[HarmonyPriority(Priority.First)]
-class GameSettingMenuStartPatch
-{
-    public static void Postfix(GameSettingMenu __instance)
-    {
-        // Need for Hide&Seek because tabs are disabled by default
-        __instance.Tabs.SetActive(true);
-    }
-}
-[HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.Close))]
-class GameSettingMenuClosePatch
-{
-    public static void Postfix()
-    {
-        // if custom game mode is HideNSeekTOHE in normal game, set standart
-        if (GameStates.IsNormalGame && Options.CurrentGameMode == CustomGameMode.HidenSeekTOHE)
-        {
-            // Select standart custom game mode
-            Options.GameMode.SetValue(0);
-        }
-    }
-}
-[HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.InitializeOptions))]
 public static class GameSettingMenuInitializeOptionsPatch
 {
     public static void Prefix(GameSettingMenu __instance)
     {
+
         // Unlocks map/impostor amount changing in online (for testing on your custom servers)
         // Changed to be able to change the map in online mode without having to re-establish the room.
-        __instance.HideForOnline = new Il2CppReferenceArray<Transform>(0);
+        __instance.GameSettingsTab.HideForOnline = new Il2CppReferenceArray<Transform>(0);
     }
-
     // Add Dleks to map selection
-    public static void Postfix([HarmonyArgument(0)] Il2CppReferenceArray<Transform> items)
+    public static void Postfix(GameSettingMenu __instance)
     {
+        var gamepreset = __instance.GamePresetsButton;
+
+        var gamesettings = __instance.GameSettingsButton;
+        __instance.GameSettingsButton.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+        __instance.GameSettingsButton.transform.localPosition = new Vector3(gamesettings.transform.localPosition.x, gamepreset.transform.localPosition.y + 0.1f, gamesettings.transform.localPosition.z);
+
+        var rolesettings = __instance.RoleSettingsButton;
+        __instance.RoleSettingsButton.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+        __instance.RoleSettingsButton.transform.localPosition = new Vector3(rolesettings.transform.localPosition.x, gamesettings.transform.localPosition.y - 0.4f, rolesettings.transform.localPosition.z);
+        //rolesettings.OnClick.RemoveAllListeners();
+        // button.OnClick.AddListener( () => {}); // add rolemenu method
+
+        //button 1
+        GameObject template = gamepreset.gameObject;
+        GameObject targetBox = UnityEngine.Object.Instantiate(template, gamepreset.transform);
+        targetBox.name = "System Settings";
+        targetBox.transform.localScale = new Vector3(0.59f, 0.59f, 1f);
+        targetBox.transform.localPosition = new Vector3(targetBox.transform.localPosition.x + 2.95f, rolesettings.transform.localPosition.y - 0.1f, targetBox.transform.localPosition.z);
+
+        _ = new LateTask(() =>
+        {
+            targetBox.transform.parent = null;
+            // gamepreset.transform.localScale = new Vector3(0f, 0f, 0f);
+            gamepreset.gameObject.SetActive(false);
+            targetBox.transform.parent = __instance.transform.Find("LeftPanel");
+        }, 0.05f, "Remove GamePreset // Set Button 1"); // remove GamePresets
+
+        var SystemButton = targetBox.GetComponent<PassiveButton>();
+        SystemButton.OnClick.RemoveAllListeners();
+        SystemButton.OnClick.AddListener((Action)(() =>
+            Logger.Info("Activated System Settings", "System Settings TEST")
+        )); 
+        var label = SystemButton.transform.Find("FontPlacer/Text_TMP").GetComponent<TextMeshPro>();
+        _ = new LateTask(() => { label.text = GetString("TabGroup.SystemSettings"); }, 0.05f, "Set Button1 Text"); 
+
+
+        //button 2
+        GameObject template2 = targetBox.gameObject;
+        GameObject targetBox2 = UnityEngine.Object.Instantiate(template2, targetBox.transform);
+        targetBox2.name = "Mod Settings";
+        targetBox2.transform.localScale = new Vector3(1f, 1f, 1f);
+        targetBox2.transform.localPosition = new Vector3(targetBox2.transform.localPosition.x, targetBox.transform.localPosition.y, targetBox2.transform.localPosition.z);
+
+        var ModConfButton = targetBox2.GetComponent<PassiveButton>();
+        ModConfButton.OnClick.RemoveAllListeners();
+        ModConfButton.OnClick.AddListener((Action)(() =>
+            Logger.Info("Activated Mod Settings", "Mop Settings TEST")
+        )); 
+        var label2 = ModConfButton.transform.Find("FontPlacer/Text_TMP").GetComponent<TextMeshPro>(); 
+        _ = new LateTask(() => { label2.text = GetString("TabGroup.ModSettings"); }, 0.05f, "Set Button2 Text"); 
+
+
+        //button 3
+        GameObject template3 = targetBox2.gameObject;
+        GameObject targetBox3 = UnityEngine.Object.Instantiate(template3, targetBox2.transform);
+        targetBox3.name = "Game Modifiers";
+        targetBox3.transform.localScale = new Vector3(1f, 1f, 1f);
+        targetBox3.transform.localPosition = new Vector3(targetBox3.transform.localPosition.x, targetBox2.transform.localPosition.y, targetBox3.transform.localPosition.z);
+
+        var GameModifButton = targetBox3.GetComponent<PassiveButton>();
+        GameModifButton.OnClick.RemoveAllListeners();
+        GameModifButton.OnClick.AddListener((Action)(() => 
+            Logger.Info("Activated game Modifier", "Game Modifiers TEST")
+        )); 
+        var label3 = GameModifButton.transform.Find("FontPlacer/Text_TMP").GetComponent<TextMeshPro>(); 
+        _ = new LateTask(() => { label3.text = GetString("TabGroup.ModifierSettings"); }, 0.05f, "Set Button3 Text"); 
+
+
+        /*
         items
             .FirstOrDefault(
                 i => i.gameObject.activeSelf && i.name.Equals("MapName", StringComparison.OrdinalIgnoreCase))?
@@ -51,10 +127,56 @@ public static class GameSettingMenuInitializeOptionsPatch
             .Values?
             // using .Insert will convert managed values and break the struct resulting in crashes
             .System_Collections_IList_Insert((int)MapNames.Dleks, new Il2CppSystem.Collections.Generic.KeyValuePair<string, int>(Constants.MapNames[(int)MapNames.Dleks], (int)MapNames.Dleks));
+        */
     }
 }
-[HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.Start))]
-[HarmonyPriority(799)]
+
+[HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.ChangeTab))]
+public class TabChange
+{
+    public static void Prefix(ref int tabNum, [HarmonyArgument(1)] bool previewOnly)
+    {
+        if (tabNum == 0)
+        { // Disables preset menu in any instances
+            tabNum = 1;
+        }
+    }
+    public static void Postfix(GameSettingMenu __instance, [HarmonyArgument(0)] int tabNum)
+    {
+
+        if (tabNum == 1 && __instance.GameSettingsTab.isActiveAndEnabled)
+        {
+            _ = new LateTask(() => __instance.MenuDescriptionText.text = DestroyableSingleton<TranslationController>.Instance.GetString(StringNames.GameSettingsDescription), 0.05f, "Fix Menu Description Text");
+            return;
+        }
+
+    }
+
+
+
+}
+[HarmonyPatch(typeof(RolesSettingsMenu), nameof(RolesSettingsMenu.Start))]
+public static class RolesSettingsMenuAwakePatch
+{
+    public static void Postfix(RolesSettingsMenu __instance)
+    {
+        //Transform mainAreaTransform = __instance.transform.Find("MainArea");
+        //RolesSettingsMenu roleTabMenu = mainAreaTransform.Find("ROLES TAB").GetComponent<RolesSettingsMenu>();
+        //Logger.Info($"{roleTabMenu == null}", "Check");
+        //if (roleTabMenu == null) return;
+
+        //__instance.
+        //roleTabMenu.
+
+        //var toheRoleSettings = Object.Instantiate(roleTabMenu, roleTabMenu.transform.parent);
+
+        //toheRoleSettings.name = "TEST ADSDSF";
+        //toheRoleSettings.enabled = true;
+        //toheRoleSettings.
+    }
+}
+[HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.Awake))]
+//[HarmonyPriority(799)]
 public static class GameOptionsMenuStartPatch
 {
     public static void Postfix(GameOptionsMenu __instance)
@@ -118,8 +240,8 @@ public static class GameOptionsMenuStartPatch
                 gameSettingMenu = Object.FindObjectOfType<GameSettingMenu>();
                 if (gameSettingMenu == null) return;
 
-                gameSettingMenu.RegularGameSettings.gameObject.SetActive(true);
-                gameSettingMenu.RolesSettings.gameObject.SetActive(true);
+                gameSettingMenu.GameSettingsTab.gameObject.SetActive(true);
+                gameSettingMenu.RoleSettingsTab.gameObject.SetActive(true);
 
                 GameObject.Find("Tint")?.SetActive(false);
 
@@ -129,8 +251,8 @@ public static class GameOptionsMenuStartPatch
                 gameSettings = GameObject.Find("Game Settings");
                 if (gameSettings == null) return;
 
-                gameSettingMenu.RegularGameSettings.gameObject.SetActive(false);
-                gameSettingMenu.RolesSettings.gameObject.SetActive(false);
+                gameSettingMenu.GameSettingsTab.gameObject.SetActive(false);
+                gameSettingMenu.RoleSettingsTab.gameObject.SetActive(false);
 
                 var children = __instance.Children.ToArray();
                 foreach (var ob in children)
@@ -162,15 +284,15 @@ public static class GameOptionsMenuStartPatch
             var roleTab = GameObject.Find("RoleTab");
             var gameTab = GameObject.Find("GameTab");
 
-            List<GameObject> menus = [gameSettingMenu.RegularGameSettings, gameSettingMenu.RolesSettings.gameObject];
-            List<SpriteRenderer> highlights = [gameSettingMenu.GameSettingsHightlight, gameSettingMenu.RolesSettingsHightlight];
+            List<GameObject> menus = [gameSettingMenu.GameSettingsTab.gameObject, gameSettingMenu.RoleSettingsTab.gameObject];
+            //List<SpriteRenderer> highlights = [gameSettingMenu.GameSettingsHightlight, gameSettingMenu];
             List<GameObject> tabs = [gameTab, roleTab];
 
             // No add roleTab in Hide & Seek
             if (GameStates.IsHideNSeek)
             {
-                menus = [gameSettingMenu.RegularGameSettings];
-                highlights = [gameSettingMenu.GameSettingsHightlight];
+                menus = [gameSettingMenu.GameSettingsTab.gameObject];
+                //highlights = [gameSettingMenu.GameSettingsHightlight];
                 tabs = [gameTab];
             }
 
@@ -263,7 +385,8 @@ public static class GameOptionsMenuStartPatch
 
                 delay += 0.1f;
                 
-                tohMenu.Children = scOptions.ToArray();
+                // FIX THIS SH
+                //tohMenu.Children = scOptions.ToArray();
                 tohSettings.gameObject.SetActive(false);
                 menus.Add(tohSettings.gameObject);
 
@@ -273,7 +396,7 @@ public static class GameOptionsMenuStartPatch
                 hatButton.Find("Icon").GetComponent<SpriteRenderer>().sprite = Utils.LoadSprite($"TOHE.Resources.Images.TabIcon_{tab}.png", 100f);
                 tabs.Add(tohTab);
                 var tohTabHighlight = hatButton.Find("Tab Background").GetComponent<SpriteRenderer>();
-                highlights.Add(tohTabHighlight);
+                //highlights.Add(tohTabHighlight);
             }
 
             // hide roleTab in Hide & Seek
@@ -303,23 +426,23 @@ public static class GameOptionsMenuStartPatch
                     {
                         if (GameStates.IsHideNSeek)
                         {
-                            gameSettingMenu.RegularGameSettings.SetActive(false);
-                            gameSettingMenu.RolesSettings.gameObject.SetActive(false);
-                            gameSettingMenu.HideNSeekSettings.gameObject.SetActive(false);
-                            gameSettingMenu.GameSettingsHightlight.enabled = false;
-                            gameSettingMenu.RolesSettingsHightlight.enabled = false;
+                            //gameSettingMenu.GameSettingsTab.SetActive(false);
+                            gameSettingMenu.RoleSettingsTab.gameObject.SetActive(false);
+                            //gameSettingMenu.GameSettingsTab.HideNSeekSettings.gameObject.SetActive(false);
+                            //gameSettingMenu.GameSettingsTab.GameSettingsHightlight.enabled = false;
+                            //gameSettingMenu.RoleSettingsTabHightlight.enabled = false;
 
                             if (copiedIndex == 0)
                             {
-                                gameSettingMenu.HideNSeekSettings.gameObject.SetActive(true);
-                                gameSettingMenu.GameSettingsHightlight.enabled = true;
+                                //gameSettingMenu.HideNSeekSettings.gameObject.SetActive(true);
+                                //gameSettingMenu.GameSettingsHightlight.enabled = true;
                             }
                         }
                         for (var j = 0; j < menusCount; j++)
                         {
                             if (GameStates.IsHideNSeek && j == 0 && copiedIndex == 0) continue;
                             menus[j].SetActive(j == copiedIndex);
-                            highlights[j].enabled = j == copiedIndex;
+                            //highlights[j].enabled = j == copiedIndex;
                         }
                     }
                     button.OnClick.AddListener((Action)value);
@@ -332,12 +455,12 @@ public static class GameOptionsMenuStartPatch
     }
 }
 
-[HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.Update))]
+//[HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.Update))]
 public class GameOptionsMenuUpdatePatch
 {
     private static float _timer = 1f;
 
-    public static void Postfix(GameOptionsMenu __instance)
+    public static void fzdPostfix(GameOptionsMenu __instance)
     {
         if (__instance.transform.parent.parent.name == "Game Settings") return;
 
@@ -366,7 +489,7 @@ public class GameOptionsMenuUpdatePatch
             if (_timer < 0.1f) return;
             _timer = 0f;
 
-            float numItems = __instance.Children.Length;
+            float numItems = __instance.Children.Count;
             var offset = 2.7f;
 
             foreach (var option in OptionItem.AllOptions.Where(opt => tab == opt.Tab && opt.OptionBehaviour != null && opt.OptionBehaviour.gameObject != null).ToArray())
@@ -464,7 +587,7 @@ public class GameOptionsMenuUpdatePatch
     }
 }
 
-[HarmonyPatch(typeof(StringOption), nameof(StringOption.OnEnable))]
+//[HarmonyPatch(typeof(StringOption), nameof(StringOption.Start))]
 public class StringOptionEnablePatch
 {
     public static bool Prefix(StringOption __instance)
@@ -488,7 +611,7 @@ public class StringOptionEnablePatch
     }
 }
 
-[HarmonyPatch(typeof(StringOption), nameof(StringOption.Increase))]
+//[HarmonyPatch(typeof(StringOption), nameof(StringOption.Increase))]
 public class StringOptionIncreasePatch
 {
     public static bool Prefix(StringOption __instance)
@@ -532,7 +655,7 @@ public class StringOptionIncreasePatch
     }
 }
 
-[HarmonyPatch(typeof(StringOption), nameof(StringOption.Decrease))]
+//[HarmonyPatch(typeof(StringOption), nameof(StringOption.Decrease))]
 public class StringOptionDecreasePatch
 {
     public static bool Prefix(StringOption __instance)
@@ -583,14 +706,15 @@ public class RpcSyncSettingsPatch
         OptionItem.SyncAllOptions();
     }
 }
-[HarmonyPatch(typeof(RolesSettingsMenu), nameof(RolesSettingsMenu.Start))]
-public static class RolesSettingsMenuPatch
+//[HarmonyPatch(typeof(RoleSettingsMenu), nameof(RoleSettingsTabMenu.Start))]
+public static class RoleSettingsTabMenuPatch
 {
-    public static void Postfix(RolesSettingsMenu __instance)
+    /*
+    public static void Postfix(RoleSettingsTabMenu __instance)
     {
         if (GameStates.IsHideNSeek) return;
 
-        foreach (var ob in __instance.Children.ToArray())
+        foreach (var ob in __instance.advancedSettingChildren.ToArray())
         {
             switch (ob.Title)
             {
@@ -605,11 +729,13 @@ public static class RolesSettingsMenuPatch
             }
         }
     }
+    */
 }
-[HarmonyPatch(typeof(NormalGameOptionsV07), nameof(NormalGameOptionsV07.SetRecommendations))]
+/*
+[HarmonyPatch(typeof(NormalGameOptionsV08), nameof(NormalGameOptionsV08.SetRecommendations))]
 public static class SetRecommendationsPatch
 {
-    public static bool Prefix(NormalGameOptionsV07 __instance, int numPlayers, bool isOnline)
+    public static bool Prefix(NormalGameOptionsV08 __instance, int numPlayers, bool isOnline)
     {
         numPlayers = Mathf.Clamp(numPlayers, 4, 15);
         __instance.PlayerSpeedMod = __instance.MapId == 4 ? 1.5f : 1.25f;
@@ -621,7 +747,7 @@ public static class SetRecommendationsPatch
         __instance.NumShortTasks = 2;
         __instance.NumEmergencyMeetings = 3;
         if (!isOnline)
-            __instance.NumImpostors = NormalGameOptionsV07.RecommendedImpostors[numPlayers];
+            __instance.NumImpostors = NormalGameOptionsV08.RecommendedImpostors[numPlayers];
         __instance.KillDistance = 0;
         __instance.DiscussionTime = 0;
         __instance.VotingTime = 120;
@@ -651,3 +777,4 @@ public static class SetRecommendationsPatch
         return false;
     }
 }
+*/

@@ -16,7 +16,7 @@ internal class Workaholic : RoleBase
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.NeutralChaos;
     //==================================================================\\
-    public override bool HasTasks(GameData.PlayerInfo player, CustomRoles role, bool ForRecompute) => !ForRecompute;
+    public override bool HasTasks(NetworkedPlayerInfo player, CustomRoles role, bool ForRecompute) => !ForRecompute;
 
     public static OptionItem WorkaholicCannotWinAtDeath;
     public static OptionItem WorkaholicVentCooldown;
@@ -121,8 +121,8 @@ internal class Workaholic : RoleBase
         {
             if (!isUI) Utils.SendMessage(GetString("GuessDisabled"), pc.PlayerId);
             else pc.ShowPopUp(GetString("GuessDisabled"));
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 }

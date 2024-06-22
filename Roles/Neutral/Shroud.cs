@@ -84,6 +84,7 @@ internal class Shroud : RoleBase
 
     public override bool OnCheckMurderAsKiller(PlayerControl killer, PlayerControl target)
     {
+        if (ShroudList.ContainsKey(target.PlayerId)) return false;
         if (target.Is(CustomRoles.NiceMini) && Mini.Age < 18)
         {
             killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.NiceMini), GetString("CantShroud")));
@@ -106,6 +107,7 @@ internal class Shroud : RoleBase
         if (!shroud.IsAlive() || Pelican.IsEaten(shroud.PlayerId))
         {
             ShroudList.Remove(shroud.PlayerId);
+            SendRPC(byte.MaxValue, shroud.PlayerId, 2);
         }
         else
         {
@@ -124,7 +126,7 @@ internal class Shroud : RoleBase
             {
                 var min = targetDistance.OrderBy(c => c.Value).FirstOrDefault();
                 var target = Utils.GetPlayerById(min.Key);
-                var KillRange = NormalGameOptionsV07.KillDistances[Mathf.Clamp(Main.NormalOptions.KillDistance, 0, 2)];
+                var KillRange = NormalGameOptionsV08.KillDistances[Mathf.Clamp(Main.NormalOptions.KillDistance, 0, 2)];
                 if (min.Value <= KillRange && shroud.CanMove && target.CanMove)
                 {
                     if (shroud.RpcCheckAndMurder(target, true))
@@ -145,23 +147,23 @@ internal class Shroud : RoleBase
         }
     }
 
-    public override void OnPlayerExiled(PlayerControl shroud, GameData.PlayerInfo exiled)
+    public override void OnPlayerExiled(PlayerControl shroud, NetworkedPlayerInfo exiled)
     {
         if (!shroud.IsAlive())
         {
-            ShroudList.Remove(shroud.PlayerId);
-            SendRPC(byte.MaxValue, shroud.PlayerId, 2);
+            ShroudList.Clear();
+            SendRPC(byte.MaxValue, byte.MaxValue, 1);
             return;
         }
 
         foreach (var shroudedId in ShroudList.Keys)
         {
             PlayerControl shrouded = Utils.GetPlayerById(shroudedId);
-            if (shrouded == null) continue;
+            if (!shrouded.IsAlive()) continue;
 
             Main.PlayerStates[shrouded.PlayerId].deathReason = PlayerState.DeathReason.Shrouded;
             shrouded.RpcMurderPlayer(shrouded);
-            shrouded.SetRealKiller(_Player);
+            shrouded.SetRealKiller(shroud);
 
             ShroudList.Remove(shrouded.PlayerId);
             SendRPC(byte.MaxValue, shrouded.PlayerId, 2);
@@ -169,7 +171,7 @@ internal class Shroud : RoleBase
     }
 
     public override string GetMarkOthers(PlayerControl seer, PlayerControl target, bool isMeeting = false)
-            => isMeeting && target != null && ShroudList.ContainsKey(target.PlayerId) ? Utils.ColorString(Utils.GetRoleColor(CustomRoles.Shroud), "◈") : string.Empty;
+        => isMeeting && ShroudList.ContainsKey(target.PlayerId) ? Utils.ColorString(Utils.GetRoleColor(CustomRoles.Shroud), "◈") : string.Empty;
     
         
 
