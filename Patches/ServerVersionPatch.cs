@@ -25,7 +25,7 @@ public static class IsVersionModdedPatch
 {
     public static bool Prefix(ref bool __result)
     {
-        __result = true;
+        __result = Main.UseVersionProtocol.Value;
         return false;
     }
 }
