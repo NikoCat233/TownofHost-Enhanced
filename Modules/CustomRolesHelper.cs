@@ -47,13 +47,13 @@ public static class CustomRolesHelper
     {
         if (player == null) return false;
         var customRole = player.GetCustomRole();
-        bool ModSideHasKillButton = customRole.GetDYRole() == RoleTypes.Impostor || customRole.GetVNRole() == CustomRoles.Impostor || customRole.GetVNRole() == CustomRoles.Shapeshifter;
+        bool ModSideHasKillButton = customRole.GetDYRole() == RoleTypes.Impostor || customRole.GetVNRole() is CustomRoles.Impostor or CustomRoles.Shapeshifter or CustomRoles.Phantom;
 
         if (player.IsModClient() || (!considerVanillaShift && !player.IsModClient()))
             return ModSideHasKillButton;
 
         bool vanillaSideHasKillButton = EAC.OriginalRoles.TryGetValue(player.PlayerId, out var OriginalRole) ?
-                                         (OriginalRole.GetDYRole() == RoleTypes.Impostor || OriginalRole.GetVNRole() == CustomRoles.Impostor || OriginalRole.GetVNRole() == CustomRoles.Shapeshifter) : ModSideHasKillButton;
+                                         (OriginalRole.GetDYRole() == RoleTypes.Impostor || OriginalRole.GetVNRole() is CustomRoles.Impostor or CustomRoles.Shapeshifter or CustomRoles.Phantom) : ModSideHasKillButton;
 
         return vanillaSideHasKillButton;
     }
@@ -295,7 +295,6 @@ public static class CustomRolesHelper
                 or CustomRoles.Infected
                 or CustomRoles.Contagious
                 or CustomRoles.Soulless
-                or CustomRoles.Lovers
                 or CustomRoles.Madmate ||
                 (role is CustomRoles.Egoist && Egoist.EgoistCountAsConverted.GetBool()));
     }
@@ -804,7 +803,9 @@ public static class CustomRolesHelper
                     return false;
                 break;
             case CustomRoles.Tricky:
-                if (pc.Is(CustomRoles.Mastermind))
+                if (pc.Is(CustomRoles.Mastermind)
+                    || pc.Is(CustomRoles.Poisoner)
+                    || pc.Is(CustomRoles.Vampire))
                     return false;
                 if (!pc.GetCustomRole().IsImpostor())
                     return false;
@@ -911,16 +912,16 @@ public static class CustomRolesHelper
                     return false;
                 break;
 
-            case CustomRoles.Schizophrenic:
+            case CustomRoles.Paranoia:
                 if (pc.Is(CustomRoles.Dictator)
                     || pc.Is(CustomRoles.Madmate)
                     || pc.Is(CustomRoles.GuardianAngelTOHE))
                     return false;
                 if (!pc.GetCustomRole().IsImpostor() && !pc.GetCustomRole().IsCrewmate())
                     return false;
-                if ((pc.GetCustomRole().IsImpostor() && !Schizophrenic.CanBeImp.GetBool()) || (pc.GetCustomRole().IsCrewmate() && !Schizophrenic.CanBeCrew.GetBool()))
+                if ((pc.GetCustomRole().IsImpostor() && !Paranoia.CanBeImp.GetBool()) || (pc.GetCustomRole().IsCrewmate() && !Paranoia.CanBeCrew.GetBool()))
                     return false;
-                if (pc.GetCustomRole().IsNotKnightable() && Schizophrenic.DualVotes.GetBool())
+                if (pc.GetCustomRole().IsNotKnightable() && Paranoia.DualVotes.GetBool())
                     return false;
                 break;
 
@@ -1091,11 +1092,14 @@ public static class CustomRolesHelper
     {
         return role is
             CustomRoles.Crewmate or
-            CustomRoles.Engineer or
-            CustomRoles.Scientist or
-            CustomRoles.GuardianAngel or
             CustomRoles.Impostor or
-            CustomRoles.Shapeshifter;
+            CustomRoles.Scientist or
+            CustomRoles.Engineer or
+            CustomRoles.GuardianAngel or
+            CustomRoles.Shapeshifter or
+            CustomRoles.Noisemaker or
+            CustomRoles.Phantom or
+            CustomRoles.Tracker;
     }
     public static Custom_Team GetCustomRoleTeam(this CustomRoles role)
     {

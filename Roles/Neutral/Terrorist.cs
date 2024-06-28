@@ -25,7 +25,7 @@ internal class Terrorist : RoleBase
         SetupRoleOptions(15400, TabGroup.NeutralRoles, CustomRoles.Terrorist);
         CanTerroristSuicideWin = BooleanOptionItem.Create(15402, "CanTerroristSuicideWin", false, TabGroup.NeutralRoles, false)
             .SetParent(CustomRoleSpawnChances[CustomRoles.Terrorist]);
-        TerroristCanGuess = BooleanOptionItem.Create(15403, "CanGuess", true, TabGroup.NeutralRoles, false)
+        TerroristCanGuess = BooleanOptionItem.Create(15403, GeneralOption.CanGuess, true, TabGroup.NeutralRoles, false)
             .SetParent(CustomRoleSpawnChances[CustomRoles.Terrorist]);
         OverrideTasksData.Create(15404, TabGroup.NeutralRoles, CustomRoles.Terrorist);
     }
@@ -89,6 +89,7 @@ internal class Terrorist : RoleBase
     {
         if (!TerroristCanGuess.GetBool())
         {
+            Logger.Info($"Guess Disabled for this player {guesser.PlayerId}", "GuessManager");
             if (!isUI) Utils.SendMessage(GetString("GuessDisabled"), pc.PlayerId);
             else pc.ShowPopUp(GetString("GuessDisabled"));
             return true;

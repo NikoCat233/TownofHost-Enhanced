@@ -33,10 +33,10 @@ internal class Doppelganger : RoleBase
         SetupSingleRoleOptions(Id, TabGroup.NeutralRoles, CustomRoles.Doppelganger, 1, zeroOne: false);
         MaxSteals = IntegerOptionItem.Create(Id + 10, "DoppelMaxSteals", new(1, 14, 1), 9, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
         CurrentVictimCanSeeRolesAsDead = BooleanOptionItem.Create(Id + 11, "DoppelCurrentVictimCanSeeRolesAsDead", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
-        KillCooldown = FloatOptionItem.Create(Id + 12, "KillCooldown", new(0f, 180f, 2.5f), 20f, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger])
+        KillCooldown = FloatOptionItem.Create(Id + 12, GeneralOption.KillCooldown, new(0f, 180f, 2.5f), 20f, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger])
             .SetValueFormat(OptionFormat.Seconds);
-        CanVent = BooleanOptionItem.Create(Id + 13, "CanVent", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
-        HasImpostorVision = BooleanOptionItem.Create(Id + 14, "ImpostorVision", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
+        CanVent = BooleanOptionItem.Create(Id + 13, GeneralOption.CanVent, true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
+        HasImpostorVision = BooleanOptionItem.Create(Id + 14, GeneralOption.ImpostorVision, true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
     }
 
     public override void Init()
@@ -58,7 +58,6 @@ internal class Doppelganger : RoleBase
 
         CurrentIdToSwap = playerId;
 
-        if (!AmongUsClient.Instance.AmHost) return;
         if (!Main.ResetCamPlayerList.Contains(playerId))
             Main.ResetCamPlayerList.Add(playerId);
     }
@@ -178,7 +177,7 @@ internal class Doppelganger : RoleBase
         pc.SetColor(newOutfit.ColorId);
         sender.AutoStartRpc(pc.NetId, (byte)RpcCalls.SetColor)
             .Write(pc.Data.NetId)
-            .Write(newOutfit.ColorId)
+            .Write((byte)newOutfit.ColorId)
         .EndRpc();
 
         pc.SetHat(newOutfit.HatId, newOutfit.ColorId);

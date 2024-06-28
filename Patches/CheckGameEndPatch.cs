@@ -11,26 +11,38 @@ using static TOHE.Translator;
 
 namespace TOHE;
 
+[HarmonyPatch(typeof(GameManager), nameof(GameManager.CheckEndGameViaTasks))]
+class CheckGameEndPatch
+{
+    public static bool Prefix(ref bool __result)
+    {
+        if (GameEndCheckerForNormal.ShouldNotCheck)
+        {
+            __result = false;
+            return false;
+        }
+
+        __result = GameEndCheckerForNormal.predicate?.CheckGameEndByTask(out _) ?? false;
+        return false;
+    }
+}
 [HarmonyPatch(typeof(LogicGameFlowNormal), nameof(LogicGameFlowNormal.CheckEndCriteria))]
 class GameEndCheckerForNormal
 {
-    private static GameEndPredicate predicate;
+    public static GameEndPredicate predicate;
     public static bool ShowAllRolesWhenGameEnd = false;
+    public static bool ShouldNotCheck = false;
 
     public static bool Prefix()
     {
         if (!AmongUsClient.Instance.AmHost) return true;
 
-        //ゲーム終了判定済みなら中断
-        if (predicate == null) return false;
+        if (predicate == null || ShouldNotCheck) return false;
 
-        //ゲーム終了しないモードで廃村以外の場合は中断
         if (Options.NoGameEnd.GetBool() && CustomWinnerHolder.WinnerTeam is not CustomWinner.Draw and not CustomWinner.Error) return false;
 
-        //廃村用に初期値を設定
+        ShowAllRolesWhenGameEnd = false;
         var reason = GameOverReason.ImpostorByKill;
-
-        //ゲーム終了判定
         predicate.CheckForEndGame(out reason);
 
         // FFA
@@ -45,7 +57,7 @@ class GameEndCheckerForNormal
             return false;
         }
 
-        //ゲーム終了時
+        // Start end game
         if (CustomWinnerHolder.WinnerTeam != CustomWinner.Default)
         {
             // Clear all Notice players 
@@ -59,6 +71,8 @@ class GameEndCheckerForNormal
 
             // Update all Notify Roles
             Utils.DoNotifyRoles(ForceLoop: true, NoCache: true);
+
+            Logger.Info("Start end", "CheckEndCriteria.Prefix");
 
             if (reason == GameOverReason.ImpostorBySabotage && (CustomRoles.Jackal.RoleExist() || CustomRoles.Sidekick.RoleExist()) && Jackal.CanWinBySabotageWhenNoImpAlive.GetBool() && !Main.AllAlivePlayerControls.Any(x => x.GetCustomRole().IsImpostorTeam()))
             {
@@ -559,7 +573,7 @@ class GameEndCheckerForNormal
             {
                 if (pc == null) continue;
 
-                dual = Schizophrenic.IsExistInGame(pc) ? 1 : 0;
+                dual = Paranoia.IsExistInGame(pc) ? 1 : 0;
                 var countType = Main.PlayerStates[pc.PlayerId].countTypes;
                 switch (countType)
                 {

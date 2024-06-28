@@ -22,11 +22,11 @@ internal class Specter : RoleBase
     public override void SetupCustomOption()
     {
         SetupRoleOptions(14900, TabGroup.NeutralRoles, CustomRoles.Specter);
-        CanVent = BooleanOptionItem.Create(14902, "CanVent", false, TabGroup.NeutralRoles, false)
+        CanVent = BooleanOptionItem.Create(14902, GeneralOption.CanVent, false, TabGroup.NeutralRoles, false)
             .SetParent(CustomRoleSpawnChances[CustomRoles.Specter]);
-        SnatchesWin = BooleanOptionItem.Create(14903, "SpecterSnatchesWin", false, TabGroup.NeutralRoles, false)
+        SnatchesWin = BooleanOptionItem.Create(14903, GeneralOption.SnatchesWin, false, TabGroup.NeutralRoles, false)
             .SetParent(CustomRoleSpawnChances[CustomRoles.Specter]);
-        CanGuess = BooleanOptionItem.Create(14904, "CanGuess", false, TabGroup.NeutralRoles, false)
+        CanGuess = BooleanOptionItem.Create(14904, GeneralOption.CanGuess, false, TabGroup.NeutralRoles, false)
             .SetParent(CustomRoleSpawnChances[CustomRoles.Specter]);
         OverrideTasksData.Create(14905, TabGroup.NeutralRoles, CustomRoles.Specter);
     }
@@ -43,5 +43,28 @@ internal class Specter : RoleBase
     {
         AURoleOptions.EngineerCooldown = 1f;
         AURoleOptions.EngineerInVentMaxTime = 0f;
+    }
+
+    public override bool GuessCheck(bool isUI, PlayerControl guesser, PlayerControl target, CustomRoles role, ref bool guesserSuicide)
+    {
+        if (!CanGuess.GetBool())
+        {
+            Logger.Info($"Guess Disabled for this player {guesser.PlayerId}", "GuessManager");
+            if (!isUI) Utils.SendMessage(Translator.GetString("GuessDisabled"), guesser.PlayerId);
+            else guesser.ShowPopUp(Translator.GetString("GuessDisabled"));
+            return true;
+        }
+        return false;
+    }
+
+    public override bool OnRoleGuess(bool isUI, PlayerControl target, PlayerControl guesser, CustomRoles role, ref bool guesserSuicide)
+    {
+        if (role == CustomRoles.Specter)
+        {
+            if (!isUI) Utils.SendMessage(Translator.GetString("GuessSpecter"), guesser.PlayerId);
+            else guesser.ShowPopUp(Translator.GetString("GuessSpecter"));
+            return true;
+        }
+        return false;
     }
 }
