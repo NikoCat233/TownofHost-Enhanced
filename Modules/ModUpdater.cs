@@ -58,6 +58,8 @@ public class ModUpdater
             Logger.Info("latestVersionl: " + latestVersion, "CheckRelease");
             ResetUpdateButton();
         }
+        isChecked = true;
+        isBroken = false;
     }
     public static void ResetUpdateButton()
     {
