@@ -120,7 +120,7 @@ internal class Romantic : RoleBase
         if (!KnowTargetRole.GetBool()) return false;
         return player.Is(CustomRoles.Romantic) && BetPlayer.TryGetValue(player.PlayerId, out var tar) && tar == target.PlayerId;
     }
-    public override bool OnCheckMurderAsKiller(PlayerControl killer, PlayerControl target)
+    public override bool ForcedCheckMurderAsKiller(PlayerControl killer, PlayerControl target)
     {
         if (killer.PlayerId == target.PlayerId) return true;
         if (Mini.Age < 18 && (target.Is(CustomRoles.NiceMini) || target.Is(CustomRoles.EvilMini)))
@@ -225,7 +225,24 @@ internal class Romantic : RoleBase
     {
         isPartnerProtected = false;
     }
+    public override void OnPlayerExiled(PlayerControl player, NetworkedPlayerInfo exiled)
+    {
+        if (exiled == null) return;
+
+        var exiledId = exiled.PlayerId;
+        if (BetPlayer.ContainsValue(exiledId))
+        {
+            player = Utils.GetPlayerById(exiledId);
+            if (player == null) return;
+
+            ChangeRole(player);
+        }
+    }
     private void OthersAfterPlayerDeathTask(PlayerControl killer, PlayerControl player, bool inMeeting)
+    {
+        ChangeRole(player);
+    }
+    private static void ChangeRole(PlayerControl player)
     {
         var playerId = player.PlayerId;
         if (!BetPlayer.ContainsValue(playerId) || player == null) return;
@@ -268,7 +285,7 @@ internal class Romantic : RoleBase
                     pc.GetRoleClass().OnAdd(pc.PlayerId);
                     Logger.Info($"No real killer for {player.GetRealName().RemoveHtmlTags()}, role changed to ruthless romantic", "Romantic");
                 }
-                else 
+                else
                 {
                     VengefulTargetId = killer.PlayerId;
 

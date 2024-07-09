@@ -29,7 +29,9 @@ namespace TOHE;
 public static class Utils
 {
     private static readonly DateTime timeStampStartTime = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    public static long TimeStamp => (long)(DateTime.Now.ToUniversalTime() - timeStampStartTime).TotalSeconds;
     public static long GetTimeStamp(DateTime? dateTime = null) => (long)((dateTime ?? DateTime.Now).ToUniversalTime() - timeStampStartTime).TotalSeconds;
+    
     public static void ErrorEnd(string text)
     {
         if (AmongUsClient.Instance.AmHost)
@@ -707,7 +709,7 @@ public static class Utils
             var text = sb.ToString();
             sb.Clear().Append(text.RemoveHtmlTags());
         }
-        sb.Append("\n\n ★ " + GetString("TabGroup.GameSettings"));
+        sb.Append("\n\n ★ " + GetString("TabGroup.ModSettings"));
         foreach (var opt in OptionItem.AllOptions.Where(x => x.GetBool() && x.Parent == null && x.Tab is TabGroup.ModSettings && !x.IsHiddenOn(Options.CurrentGameMode)).ToArray())
         {
             sb.Append($"\n{opt.GetName(true)}: {opt.GetString()}");
@@ -1903,7 +1905,9 @@ public static class Utils
 
                         // ====== Seer know target role ======
 
-                        string TargetRoleText = ExtendedPlayerControl.KnowRoleTarget(seer, target)
+                        bool KnowRoleTarget = ExtendedPlayerControl.KnowRoleTarget(seer, target, true);
+                        
+                        string TargetRoleText = KnowRoleTarget
                                 ? $"<size={fontSize}>{seer.GetDisplayRoleAndSubName(target, false)}{GetProgressText(target)}</size>\r\n" : "";
 
                         if (seer.IsAlive() && Overseer.IsRevealedPlayer(seer, target) && target.Is(CustomRoles.Trickster))
@@ -2146,7 +2150,7 @@ public static class Utils
         tmp += input;
         ChangeTo = Math.Clamp(tmp, 0, max);
     }
-    public static void CountAlivePlayers(bool sendLog = false)
+    public static void CountAlivePlayers(bool sendLog = false, bool checkGameEnd = true)
     {
         int AliveImpostorCount = Main.AllAlivePlayerControls.Count(pc => pc.Is(Custom_Team.Impostor));
         if (Main.AliveImpostorCount != AliveImpostorCount)
@@ -2170,6 +2174,9 @@ public static class Utils
             }
             sb.Append($"All:{AllAlivePlayersCount}/{AllPlayersCount}");
             Logger.Info(sb.ToString(), "CountAlivePlayers");
+
+            if (AmongUsClient.Instance.AmHost && checkGameEnd)
+                GameManager.Instance?.LogicFlow?.CheckEndCriteria();
         }
     }
     public static string GetVoteName(byte num)

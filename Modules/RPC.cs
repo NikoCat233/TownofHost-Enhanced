@@ -244,6 +244,12 @@ internal class RPCHandlerPatch
                     bool cheating = reader.ReadBoolean();
                     if (__instance.GetClientId() < 0)
                         break;
+
+                    if (!Main.playerVersion.TryGetValue(__instance.GetClientId(), out _))
+                    {
+                        RPC.RpcVersionCheck();
+                    }
+
                     Main.playerVersion[__instance.GetClientId()] = new PlayerVersion(version, tag, forkId);
 
                     if (Main.VersionCheat.Value && __instance.GetClientId() == AmongUsClient.Instance.HostId) RPC.RpcVersionCheck();
@@ -257,7 +263,7 @@ internal class RPCHandlerPatch
                     // Kick Unmached Player Start
                     if (AmongUsClient.Instance.AmHost)
                     {
-                        if (!IsVersionMatch(__instance.GetClientId()))
+                        if (!IsVersionMatch(__instance.GetClientId()) && !Main.VersionCheat.Value)
                         {
                             _ = new LateTask(() =>
                             {
@@ -802,7 +808,7 @@ internal static class RPC
     {
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetDeathReason, SendOption.Reliable, -1);
         writer.Write(playerId);
-        writer.WritePacked((int)deathReason);
+        writer.Write((int)deathReason);
         AmongUsClient.Instance.FinishRpcImmediately(writer);
     }
     public static void GetDeathReason(MessageReader reader)

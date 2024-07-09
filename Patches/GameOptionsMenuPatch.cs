@@ -41,10 +41,18 @@ public static class GameOptionsMenuPatch
 
         return false;
     }
+    // Thanks: https://github.com/Gurge44/EndlessHostRoles
+    [HarmonyPatch(nameof(GameOptionsMenu.Initialize)), HarmonyPostfix]
+    private static void InitializePostfix()
+    {
+        GameObject.Find("PlayerOptionsMenu(Clone)")?.transform.FindChild("Background")?.gameObject.SetActive(false);
+    }
+
     [HarmonyPatch(nameof(GameOptionsMenu.CreateSettings)), HarmonyPrefix]
     private static bool CreateSettingsPrefix(GameOptionsMenu __instance)
     {
         Instance ??= __instance;
+        // When is vanilla tab, run vanilla code
         if (ModGameOptionsMenu.TabIndex < 3) return true;
         __instance.scrollBar.SetYBoundsMax(CalculateScrollBarYBoundsMax());
         __instance.StartCoroutine(CoRoutine().WrapToIl2Cpp());
@@ -165,10 +173,10 @@ public static class GameOptionsMenuPatch
                 var enabled = !option.IsHiddenOn(Options.CurrentGameMode) && (option.Parent == null || (!option.Parent.IsHiddenOn(Options.CurrentGameMode) && option.Parent.GetBool()));
 
                 if (option is TextOptionItem) num -= 0.63f;
-                else
+                else if (enabled)
                 {
-                    if (option.IsHeader && enabled) num -= 0.3f;
-                    if (enabled) num -= 0.45f;
+                    if (option.IsHeader) num -= 0.3f;
+                    num -= 0.45f;
                 }
             }
 
@@ -206,11 +214,11 @@ public static class GameOptionsMenuPatch
 
         var labelBackground = optionBehaviour.transform.FindChild("LabelBackground");
         labelBackground.GetComponent<SpriteRenderer>().color = color;
-        labelBackground.localScale += new Vector3(0.9f, -0.2f, 0f) + scaleOffset;
-        labelBackground.localPosition += new Vector3(-0.5f, 0f, 0f) + positionOffset;
+        labelBackground.localScale += new Vector3(1f, -0.2f, 0f) + scaleOffset;
+        labelBackground.localPosition += new Vector3(-0.6f, 0f, 0f) + positionOffset;
 
         var titleText = optionBehaviour.transform.FindChild("Title Text");
-        titleText.localPosition += new Vector3(-0.5f, 0f, 0f) + positionOffset;
+        titleText.localPosition += new Vector3(-0.7f, 0f, 0f) + positionOffset;
         titleText.GetComponent<RectTransform>().sizeDelta = new(sizeDelta_x, 0.37f);
         var textMeshPro = titleText.GetComponent<TextMeshPro>();
         textMeshPro.alignment = TextAlignmentOptions.MidlineLeft;
@@ -311,34 +319,64 @@ public static class GameOptionsMenuPatch
             __instance.ControllerSelectable.Add(x);
         __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
     }
-
     private static BaseGameSetting GetSetting(OptionItem item)
     {
+        static t CreateAndInvoke<t>(Func<t> func) where t : BaseGameSetting
+        {
+            return func.Invoke();
+        }
+
+        // Redundant casts are here for clarity
+        // C# dosen't support intra switch statement methods 😭
+
         BaseGameSetting baseGameSetting = item switch
         {
-            BooleanOptionItem => new CheckboxGameSetting { Type = OptionTypes.Checkbox, },
-            IntegerOptionItem integerOptionItem => new IntGameSetting
-            {
-                Type = OptionTypes.Int,
-                Value = integerOptionItem.GetInt(),
-                Increment = integerOptionItem.Rule.Step,
-                ValidRange = new(integerOptionItem.Rule.MinValue, integerOptionItem.Rule.MaxValue),
-                ZeroIsInfinity = false,
-                SuffixType = NumberSuffixes.Multiplier,
-                FormatString = string.Empty,
-            },
-            FloatOptionItem floatOptionItem => new FloatGameSetting
-            {
-                Type = OptionTypes.Float,
-                Value = floatOptionItem.GetFloat(),
-                Increment = floatOptionItem.Rule.Step,
-                ValidRange = new(floatOptionItem.Rule.MinValue, floatOptionItem.Rule.MaxValue),
-                ZeroIsInfinity = false,
-                SuffixType = NumberSuffixes.Multiplier,
-                FormatString = string.Empty,
-            },
-            StringOptionItem stringOptionItem => new StringGameSetting { Type = OptionTypes.String, Values = new StringNames[stringOptionItem.Selections.Length], Index = stringOptionItem.GetInt(), },
-            PresetOptionItem presetOptionItem => new StringGameSetting { Type = OptionTypes.String, Values = new StringNames[presetOptionItem.ValuePresets], Index = presetOptionItem.GetInt(), },
+            BooleanOptionItem => CreateAndInvoke<CheckboxGameSetting>(() => {
+                var x = ScriptableObject.CreateInstance<CheckboxGameSetting>();
+                x.Type = OptionTypes.Checkbox;
+
+                return x;
+            }),
+            IntegerOptionItem integerOptionItem => CreateAndInvoke<IntGameSetting>(() => {
+                var x = ScriptableObject.CreateInstance<IntGameSetting>();
+                x.Type = OptionTypes.Int;
+                x.Value = integerOptionItem.GetInt();
+                x.Increment = integerOptionItem.Rule.Step;
+                x.ValidRange = new(integerOptionItem.Rule.MinValue, integerOptionItem.Rule.MaxValue);
+                x.ZeroIsInfinity = false;
+                x.SuffixType = NumberSuffixes.Multiplier;
+                x.FormatString = string.Empty;
+
+                return x;
+            }),
+            FloatOptionItem floatOptionItem => CreateAndInvoke<FloatGameSetting>(() => {
+                var x = ScriptableObject.CreateInstance<FloatGameSetting>();
+                x.Type = OptionTypes.Int;
+                x.Value = floatOptionItem.GetInt();
+                x.Increment = floatOptionItem.Rule.Step;
+                x.ValidRange = new(floatOptionItem.Rule.MinValue, floatOptionItem.Rule.MaxValue);
+                x.ZeroIsInfinity = false;
+                x.SuffixType = NumberSuffixes.Multiplier;
+                x.FormatString = string.Empty;
+
+                return x;
+            }),
+            StringOptionItem stringOptionItem => CreateAndInvoke<StringGameSetting>(() => {
+                var x = ScriptableObject.CreateInstance<StringGameSetting>();
+                x.Type = OptionTypes.String; 
+                x.Values = new StringNames[stringOptionItem.Selections.Length]; 
+                x.Index = stringOptionItem.GetInt();
+
+                return x;
+            }),
+            PresetOptionItem presetOptionItem => CreateAndInvoke<StringGameSetting>(() => {
+                var x = ScriptableObject.CreateInstance<StringGameSetting>();
+                x.Type = OptionTypes.String;
+                x.Values = new StringNames[presetOptionItem.ValuePresets];
+                x.Index = presetOptionItem.GetInt();
+
+                return x;
+            }),
             _ => null
         };
 
@@ -530,12 +568,18 @@ public static class StringOptionPatch
         {
             var item = OptionItem.AllOptions[index];
             var name = item.GetName();
+            var language = DestroyableSingleton<TranslationController>.Instance.currentLanguage.languageID;
+            //Logger.Info($" Language: {language}", "StringOption.Initialize");
+
             if (EnumHelper.GetAllValues<CustomRoles>().Any(x => GetString($"{x}") == name.RemoveHtmlTags()))
             {
                 name = $"<size=3.5>{name}</size>";
                 __instance.TitleText.fontWeight = FontWeight.Black;
-                __instance.TitleText.outlineColor = new(255, 255, 255, 255);
-                __instance.TitleText.outlineWidth = 0.04f;
+                __instance.TitleText.outlineWidth = language switch
+                {
+                    SupportedLangs.Russian or SupportedLangs.Japanese or SupportedLangs.SChinese or SupportedLangs.TChinese => 0.15f,
+                    _ => 0.35f,
+                };
             }
             __instance.TitleText.text = item.GetName();
             return false;

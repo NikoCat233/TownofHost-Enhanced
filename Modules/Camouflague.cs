@@ -204,7 +204,7 @@ public static class Camouflage
         // if the current Outfit is the same, return it
         if (newOutfit.Compare(target.Data.DefaultOutfit)) return;
 
-        Logger.Info($"newOutfit={newOutfit.GetString().RemoveHtmlTags()}", "RpcSetSkin");
+        Logger.Info($"playerId {target.PlayerId} newOutfit={newOutfit.GetString().RemoveHtmlTags()}", "RpcSetSkin");
 
         // Start to set Outfit
 
