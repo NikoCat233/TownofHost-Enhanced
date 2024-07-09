@@ -201,7 +201,9 @@ internal class Chameleon : RoleBase
                     ventedId.Remove(chameleonId);
                     ventedId.Add(chameleonId, ventId);
 
-                    physics.RpcBootFromVentDesync(ventId, chameleon);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(physics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, chameleon.GetClientId());
+                    writer.WritePacked(ventId);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
 
                     InvisDuration.Remove(chameleonId);
                     InvisDuration.Add(chameleonId, GetTimeStamp());

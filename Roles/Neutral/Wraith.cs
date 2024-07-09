@@ -156,7 +156,9 @@ internal class Wraith : RoleBase
                 ventedId.Remove(pc.PlayerId);
                 ventedId.Add(pc.PlayerId, ventId);
 
-                __instance.RpcBootFromVentDesync(ventId, pc);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, pc.GetClientId());
+                writer.WritePacked(ventId);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
 
                 InvisTime.Add(pc.PlayerId, Utils.GetTimeStamp());
                 SendRPC(pc);

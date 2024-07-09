@@ -1,5 +1,4 @@
-﻿using BepInEx.Unity.IL2CPP.Utils.Collections;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
 namespace TOHE.Patches;
@@ -18,7 +17,7 @@ public class LobbyStartPatch
         LobbyPaintSprite = Utils.LoadSprite("TOHE.Resources.Images.LobbyPaint.png", 290f);
         DropshipDecorationsSprite = Utils.LoadSprite("TOHE.Resources.Images.Dropship-Decorations.png", 60f);
     }
-    public static void Postfix(LobbyBehaviour __instance)
+    public static void Postfix()
     {
         float waitTime = 0f;
         if (FirstDecorationsLoad)
@@ -28,7 +27,7 @@ public class LobbyStartPatch
 
         _ = new LateTask(() =>
         {
-            __instance.StartCoroutine(CoLoadDecorations().WrapToIl2Cpp());
+            Main.Instance.StartCoroutine(CoLoadDecorations());
         }, waitTime, "Co Load Dropship Decorations", shoudLog: false);
 
         static System.Collections.IEnumerator CoLoadDecorations()

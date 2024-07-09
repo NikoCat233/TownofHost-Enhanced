@@ -48,7 +48,7 @@ public class Main : BasePlugin
     public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
     /******************* Change one of the three variables to true before making a release. *******************/
-    public static readonly bool Canary = true; // ACTIVE - Latest: V2.0.0 Canary 9
+    public static readonly bool Canary = true; // ACTIVE - Latest: V2.0.0 Canary 8 Hotfix 1
     public static readonly bool fullRelease = false; // INACTIVE - Latest: V1.6.0
     public static readonly bool devRelease = false; // INACTIVE - Latest: V2.0.0 Dev 25
 
