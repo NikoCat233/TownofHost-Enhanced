@@ -39,12 +39,12 @@ public class Main : BasePlugin
     public static ConfigEntry<string> DebugKeyInput { get; private set; }
 
     public const string PluginGuid = "com.0xdrmoe.townofhostenhanced";
-    public const string PluginVersion = "2024.0703.200.08100"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.0.0 Canary 8 Hotfix 1N";
+    public const string PluginVersion = "2024.0709.200.09000"; // YEAR.MMDD.VERSION.CANARYDEV
+    public const string PluginDisplayVersion = "2.0.0 Canary 9N";
     public const string SupportedVersionAU = "2024.6.18";
 
-    public static string FakeGitInfo = "44674c37(Support-2024-6-18)";
-    public static string FakePluginVersion = "2024.0703.200.08100";
+    public static string FakeGitInfo = "d4917008(Support-2024-6-18)";
+    public static string FakePluginVersion = "2024.0709.200.09000";
     public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
     /******************* Change one of the three variables to true before making a release. *******************/
