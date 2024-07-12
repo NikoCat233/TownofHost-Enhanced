@@ -214,7 +214,7 @@ static class ExtendedPlayerControl
                 sender = PlayerControl.LocalPlayer;
             }
 
-            var writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable);
+            var writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, killer.GetClientId());
             writer.WriteNetObject(target);
             writer.Write((int)MurderResultFlags.FailedProtected);
             AmongUsClient.Instance.FinishRpcImmediately(writer);

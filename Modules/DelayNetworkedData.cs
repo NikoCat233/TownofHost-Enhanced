@@ -1,4 +1,4 @@
-﻿using Hazel;
+using Hazel;
 using InnerNet;
 using System;
 using UnityEngine;
@@ -140,7 +140,7 @@ public class InnerNetClientPatch
     public static void FixedUpdatePostfix(InnerNetClient __instance)
     {
         // Send a networked data pre 2 fixed update should be a good practice?
-        if (!__instance.AmHost || __instance.Streams == null || __instance.NetworkMode != NetworkModes.OnlineGame) return;
+        if (!__instance.AmHost || __instance.__instance.NetworkMode != NetworkModes.OnlineGame) return;
 
         if (timer == 0)
         {
@@ -148,7 +148,7 @@ public class InnerNetClientPatch
             return;
         }
 
-        var player = GameData.Instance.AllPlayers.ToArray().Where(x => x.IsDirty).FirstOrDefault();
+        var player = GameData.Instance.AllPlayers.ToArray().FirstOrDefault(x => x.IsDirty);
         if (player != null)
         {
             timer = 0;
