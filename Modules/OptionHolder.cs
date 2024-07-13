@@ -124,7 +124,8 @@ public static class Options
         "CamouflageMode.Pyro",
         "CamouflageMode.ryuk",
         "CamouflageMode.Gurge44",
-        "CamouflageMode.TommyXL"
+        "CamouflageMode.TommyXL",
+        "CamouflageMode.Sarha"
     ];
 
 
@@ -1062,12 +1063,10 @@ public static class Options
         GradientTagsOpt = BooleanOptionItem.Create(60031, "EnableGadientTags", false, TabGroup.SystemSettings, false)
             .SetHeader(true);
         EnableKillerLeftCommand = BooleanOptionItem.Create(60040, "EnableKillerLeftCommand", true, TabGroup.SystemSettings, false)
-            .SetColor(Color.green)
             .HideInHnS();
         ShowMadmatesInLeftCommand = BooleanOptionItem.Create(60042, "ShowMadmatesInLeftCommand", true, TabGroup.SystemSettings, false)
             .SetParent(EnableKillerLeftCommand);
         SeeEjectedRolesInMeeting = BooleanOptionItem.Create(60041, "SeeEjectedRolesInMeeting", true, TabGroup.SystemSettings, false)
-            .SetColor(Color.green)
             .HideInHnS();
         
         KickLowLevelPlayer = IntegerOptionItem.Create(60050, "KickLowLevelPlayer", new(0, 100, 1), 0, TabGroup.SystemSettings, false)
