@@ -12,6 +12,7 @@ public class InnerNetClientPatch
     [HarmonyPrefix]
     public static bool SendInitialDataPrefix(InnerNetClient __instance, int clientId)
     {
+        if (!Main.UseVersionProtocol.Value) return true;
         if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
         // We make sure other stuffs like playercontrol and Lobby behavior is spawned properly
         // Then we spawn networked data for new clients
@@ -82,6 +83,7 @@ public class InnerNetClientPatch
     [HarmonyPrefix]
     public static bool SendAllStreamedObjectsPrefix(InnerNetClient __instance, ref bool __result)
     {
+        if (!Main.UseVersionProtocol.Value) return true;
         if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
         // Bypass all NetworkedData here.
         __result = false;
@@ -139,6 +141,7 @@ public class InnerNetClientPatch
     [HarmonyPostfix]
     public static void FixedUpdatePostfix(InnerNetClient __instance)
     {
+        if (!Main.UseVersionProtocol.Value) return;
         // Send a networked data pre 2 fixed update should be a good practice?
         if (!__instance.AmHost || __instance.Streams == null || __instance.NetworkMode != NetworkModes.OnlineGame) return;
 
