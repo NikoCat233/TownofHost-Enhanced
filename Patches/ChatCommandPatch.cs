@@ -1,6 +1,7 @@
 using Assets.CoreScripts;
 using Hazel;
 using System;
+using System.Collections;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -39,7 +40,10 @@ internal class ChatCommands
     {
         if (__instance.quickChatField.visible == false && __instance.freeChatField.textArea.text == "") return false;
         if (!GameStates.IsModHost && !AmongUsClient.Instance.AmHost) return true;
-        __instance.timeSinceLastMessage = 3f;
+        if (Main.UseVersionProtocol.Value)
+        {
+            __instance.timeSinceLastMessage = 3f;
+        }
         var text = __instance.freeChatField.textArea.text;
         if (ChatHistory.Count == 0 || ChatHistory[^1] != text) ChatHistory.Add(text);
         ChatControllerUpdatePatch.CurrentHistorySelection = ChatHistory.Count;
@@ -898,6 +902,10 @@ internal class ChatCommands
                         {
                             PlayerControl.LocalPlayer.GetRoleClass()?.OnRemove(PlayerControl.LocalPlayer.PlayerId);
                             PlayerControl.LocalPlayer.RpcSetRole(rl.GetRoleTypes());
+                            AntiBlackout.SendGameData("/changerole");
+                            Main.PlayerStates[PlayerControl.LocalPlayer.PlayerId].IsDead = false;
+                            Main.PlayerStates[PlayerControl.LocalPlayer.PlayerId].deathReason = PlayerState.DeathReason.etc;
+                            RPC.SendDeathReason(PlayerControl.LocalPlayer.PlayerId, PlayerState.DeathReason.etc);
                             PlayerControl.LocalPlayer.RpcSetCustomRole(rl);
                             PlayerControl.LocalPlayer.GetRoleClass().OnAdd(PlayerControl.LocalPlayer.PlayerId);
                             Utils.SendMessage(string.Format("Debug Set your role to {0}", rl.ToString()), PlayerControl.LocalPlayer.PlayerId);
@@ -1804,6 +1812,7 @@ internal class ChatCommands
     {
         canceled = false;
         if (!AmongUsClient.Instance.AmHost) return;
+        if (!Main.UseVersionProtocol.Value) return;
         if ((Options.NewHideMsg.GetBool() || Blackmailer.HasEnabled) && !player.OwnedByHost()) // Blackmailer.ForBlackmailer.Contains(player.PlayerId)) && PlayerControl.LocalPlayer.IsAlive() && !player.OwnedByHost())
         {
             ChatManager.SendMessage(player, text);
@@ -2932,8 +2941,23 @@ class ChatUpdatePatch
     public static bool DoBlockChat = false;
     public static void Postfix(ChatController __instance)
     {
-        if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count == 0 || (Main.MessagesToSend[0].Item2 == byte.MaxValue && Main.MessageWait.Value > __instance.timeSinceLastMessage)) return;
+        if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count == 0
+                    || (Main.MessagesToSend[0].Item2 == byte.MaxValue && Main.MessageWait.Value > __instance.timeSinceLastMessage)
+                    || (!Main.UseVersionProtocol.Value && Main.MessageWait.Value > __instance.timeSinceLastMessage)) return;
+
         if (DoBlockChat) return;
+
+        if (Main.FreezeMessageToSend.Value)
+        {
+            Main.MessagesToSend.Clear();
+            return;
+        }
+
+        if (!Main.UseVersionProtocol.Value && Main.MessageWait.Value < 3)
+        {
+            Main.MessageWait.Value = 3;
+            return;
+        }
 
         if (Main.DarkTheme.Value)
         {
@@ -2993,6 +3017,50 @@ class ChatUpdatePatch
             player.SetName(name);
         }
 
+        if (Main.UseVersionProtocol.Value == false)
+        {
+            msg = clearHtml(msg);
+            msg = ReplaceNumbers(msg);
+
+            if (msg.Length > 100)
+            {
+                Logger.Info($"Message is too long {msg}", "Message to send");
+                return;
+            }
+
+            if (msg == string.Empty) return;
+
+            Logger.Info($"Message to send : {msg}", "Message to send");
+        }
+
+        if (!Main.UseVersionProtocol.Value)
+        {
+            if (player.Data.IsDead || !player.IsAlive() && clientId != player.GetClientId())
+            {
+                Logger.Info("Send chat as Revive", "SendChat");
+                Main.Instance.StartCoroutine(SendChatAsRevive(player, msg, title, clientId));
+            }
+            else
+            {
+                Logger.Info("Send chat as alive", "SendChat");
+                var writer2 = CustomRpcSender.Create("MessagesToSendAlive", SendOption.None);
+                writer2.StartMessage(clientId);
+                writer2.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                    .Write(title)
+                    .EndRpc();
+                writer2.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+                    .Write(msg)
+                    .EndRpc();
+                writer2.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                    .Write(player.Data.PlayerName)
+                    .EndRpc();
+                writer2.EndMessage();
+                writer2.SendMessage();
+            }
+
+            __instance.timeSinceLastMessage = 0f;
+            return;
+        }
 
         var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
         writer.StartMessage(clientId);
@@ -3011,6 +3079,63 @@ class ChatUpdatePatch
         writer.SendMessage();
 
         __instance.timeSinceLastMessage = 0f;
+    }
+
+    public static string clearHtml(string text)
+    {
+        return Regex.Replace(text, "<.*?>", string.Empty);
+    }
+
+    public static string ReplaceNumbers(string text)
+    {
+        Dictionary<char, string> numberMap = new Dictionary<char, string>()
+    {
+        { '0', "零" },
+        { '1', "一" },
+        { '2', "二" },
+        { '3', "三" },
+        { '4', "四" },
+        { '5', "五" },
+        { '6', "六" },
+        { '7', "七" },
+        { '8', "八" },
+        { '9', "九" }
+    };
+
+        foreach (var pair in numberMap)
+        {
+            text = text.Replace(pair.Key.ToString(), pair.Value);
+        }
+
+        return text;
+    }
+    public static IEnumerator SendChatAsRevive(PlayerControl player, string msg, string title, int clientId)
+    {
+        player.Data.IsDead = false;
+        AntiBlackout.SendGameData("SendChatAsRevive");
+
+        yield return new WaitForSeconds(0.1f);
+
+        var writer = CustomRpcSender.Create("ReviveMessagesToSend", SendOption.None);
+        writer.StartMessage(clientId);
+        writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+            .Write(title)
+            .EndRpc();
+        writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+            .Write(msg)
+            .EndRpc();
+        writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+            .Write(player.Data.PlayerName)
+            .EndRpc();
+        writer.EndMessage();
+        writer.SendMessage();
+
+        yield return new WaitForSeconds(0.05f);
+
+        player.Data.IsDead = true;
+        AntiBlackout.SendGameData("SendChatAsReviveFinished");
+
+        yield break;
     }
 }
 
@@ -3033,6 +3158,7 @@ internal class UpdateCharCountPatch
 {
     public static void Postfix(FreeChatInputField __instance)
     {
+        if (!Main.UseVersionProtocol.Value) return;
         int length = __instance.textArea.text.Length;
         __instance.charCountText.SetText($"{length}/{__instance.textArea.characterLimit}");
         if (length < (AmongUsClient.Instance.AmHost ? 888 : 250))

@@ -563,10 +563,13 @@ class InnerNetClientSpawnPatch
                         // Only for vanilla
                         if (!client.Character.OwnedByHost() && !client.Character.IsModClient())
                         {
-                            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(LobbyBehaviour.Instance.NetId, (byte)RpcCalls.LobbyTimeExpiring, SendOption.None, client.Id);
-                            writer.WritePacked((int)GameStartManagerPatch.timer);
-                            writer.Write(false);
-                            AmongUsClient.Instance.FinishRpcImmediately(writer);
+                            if (Main.UseVersionProtocol.Value)
+                            {
+                                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(LobbyBehaviour.Instance.NetId, (byte)RpcCalls.LobbyTimeExpiring, SendOption.None, client.Id);
+                                writer.WritePacked((int)GameStartManagerPatch.timer);
+                                writer.Write(false);
+                                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                            }
                         }
                         // Non-host modded client
                         else if (!client.Character.OwnedByHost() && client.Character.IsModClient())

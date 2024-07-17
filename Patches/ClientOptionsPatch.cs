@@ -14,7 +14,7 @@ public static class OptionsMenuBehaviourStartPatch
     private static ClientOptionItem ShowTextOverlay;
     private static ClientOptionItem ModeForSmallScreen;
     private static ClientOptionItem HorseMode;
-    private static ClientOptionItem AutoMuteUs;
+    //private static ClientOptionItem AutoMuteUs;
     private static ClientOptionItem ForceOwnLanguage;
     private static ClientOptionItem ForceOwnLanguageRoleName;
     private static ClientOptionItem EnableCustomButton;
@@ -26,6 +26,8 @@ public static class OptionsMenuBehaviourStartPatch
     private static ClientOptionItem VersionCheat;
     private static ClientOptionItem GodMode;
     private static ClientOptionItem AutoRehost;
+    private static ClientOptionItem UseVersionProtocol;
+    private static ClientOptionItem FreezeMessageToSend;
 #endif
 
     public static void Postfix(OptionsMenuBehaviour __instance)
@@ -39,6 +41,7 @@ public static class OptionsMenuBehaviourStartPatch
             Main.VersionCheat.Value = false;
             Main.GodMode.Value = false;
             Main.AutoRehost.Value = false;
+            Main.UseVersionProtocol.Value = true;
         }
 
         if (UnlockFPS == null || UnlockFPS.ToggleButton == null)
@@ -98,10 +101,10 @@ public static class OptionsMenuBehaviourStartPatch
                 }
             }
         }
-        if (AutoMuteUs == null || AutoMuteUs.ToggleButton == null)
-        {
-            AutoMuteUs = ClientOptionItem.Create("AutoMuteUs", Main.AutoMuteUs, __instance);
-        }
+        //if (AutoMuteUs == null || AutoMuteUs.ToggleButton == null)
+        //{
+        //    AutoMuteUs = ClientOptionItem.Create("AutoMuteUs", Main.AutoMuteUs, __instance);
+        //}
         if (ForceOwnLanguage == null || ForceOwnLanguage.ToggleButton == null)
         {
             ForceOwnLanguage = ClientOptionItem.Create("ForceOwnLanguage", Main.ForceOwnLanguage, __instance);
@@ -146,6 +149,19 @@ public static class OptionsMenuBehaviourStartPatch
             if ((AutoRehost == null || AutoRehost.ToggleButton == null) && DebugModeManager.AmDebugger)
             {
                 AutoRehost = ClientOptionItem.Create("AutoRehost", Main.AutoRehost, __instance);
+            }
+            if ((UseVersionProtocol == null || UseVersionProtocol.ToggleButton == null) && DebugModeManager.AmDebugger)
+            {
+                UseVersionProtocol = ClientOptionItem.Create("UseVersionProtocol", Main.UseVersionProtocol, __instance);
+            }
+            if ((FreezeMessageToSend == null || FreezeMessageToSend.ToggleButton == null) && DebugModeManager.AmDebugger)
+            {
+                FreezeMessageToSend = ClientOptionItem.Create("FreezeMessageToSend", Main.FreezeMessageToSend, __instance, ClearMessageToSend);
+                static void ClearMessageToSend()
+                {
+                    Main.MessagesToSend.Clear();
+                    Logger.Info("Clear MessagesToSend", "ClientOptionsPatch");
+                }
             }
         }
 #endif

@@ -27,17 +27,12 @@ public static class Options
         Logger.Msg("Mod option loading start", "Load Options");
         try
         {
-            Load();
+            Main.Instance.StartCoroutine(CoLoadOptions());
         }
         catch (Exception error)
         {
             Logger.Error($"Fatal error after loading mod options: {error}", "Load Options");
         }
-        finally
-        {
-            Logger.Msg("Mod option loading eng", "Load Options");
-        }
-        //taskOptionsLoad.ContinueWith(t => { Logger.Msg("Mod option loading end", "Load Options"); });
     }
 
     // Presets
@@ -592,7 +587,7 @@ public static class Options
     {
         return CustomRoleSpawnChances.TryGetValue(role, out var option) ? option.GetValue()/* / 10f */ : roleSpawnChances[role];
     }
-    public static void Load()
+    private static System.Collections.IEnumerator CoLoadOptions()
     {
         //#######################################
         // 28400 last id for roles/add-ons (Next use 28500)
@@ -601,7 +596,7 @@ public static class Options
 
 
         // Start Load Settings
-        if (IsLoaded) return;
+        if (IsLoaded) yield break;
         OptionSaver.Initialize();
 
         yield return null;
@@ -679,6 +674,8 @@ public static class Options
             .SetGameMode(CustomGameMode.Standard);
         #endregion
 
+        yield return null;
+
         #region Impostors Settings
         // Impostor
         TextOptionItem.Create(10000000, "RoleType.VanillaRoles", TabGroup.ImpostorRoles) // Vanilla
@@ -752,6 +749,8 @@ public static class Options
         CustomRoleManager.GetNormalOptions(Custom_RoleType.ImpostorGhosts).ForEach(r => r.SetupCustomOption());
 
         #endregion
+
+        yield return null;
 
         #region Crewmates Settings
         /*
@@ -828,6 +827,8 @@ public static class Options
 
         #endregion
 
+        yield return null;
+
         #region Neutrals Settings
 
 
@@ -867,6 +868,8 @@ public static class Options
         CustomRoleManager.GetNormalOptions(Custom_RoleType.NeutralKilling).ForEach(r => r.SetupCustomOption());
 
         #endregion
+
+        yield return null;
 
         #region Add-Ons Settings
         // Add-Ons 
@@ -1056,11 +1059,15 @@ public static class Options
 
         #endregion
 
+        yield return null;
+
         #region Experimental Roles/Add-ons Settings
 
 
 
         #endregion
+
+        yield return null;
 
         #region System Settings
         GradientTagsOpt = BooleanOptionItem.Create(60031, "EnableGadientTags", false, TabGroup.SystemSettings, false)
@@ -1207,6 +1214,8 @@ public static class Options
             .SetColor(Color.cyan)
             .SetHeader(true);
         #endregion 
+
+        yield return null;
 
         #region Game Settings
         //FFA
@@ -1888,10 +1897,12 @@ public static class Options
             .SetColor(new Color32(217, 218, 255, byte.MaxValue));
         #endregion
 
+        yield return null;
 
         // End Load Settings
         OptionSaver.Load();
         IsLoaded = true;
+        Logger.Msg("Mod option loading eng", "Load Options");
     }
 
     public static void SetupRoleOptions(int id, TabGroup tab, CustomRoles role, CustomGameMode customGameMode = CustomGameMode.Standard, bool zeroOne = false)

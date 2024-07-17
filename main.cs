@@ -105,6 +105,8 @@ public class Main : BasePlugin
     public static bool IsHostVersionCheating = false;
     public static ConfigEntry<bool> GodMode { get; private set; }
     public static ConfigEntry<bool> AutoRehost { get; private set; }
+    public static ConfigEntry<bool> UseVersionProtocol { get; private set; }
+    public static ConfigEntry<bool> FreezeMessageToSend { get; private set; }
 
     public static Dictionary<int, PlayerVersion> playerVersion = [];
     //Preset Name Options
@@ -445,6 +447,10 @@ public class Main : BasePlugin
         VersionCheat = Config.Bind("Client Options", "VersionCheat", false);
         GodMode = Config.Bind("Client Options", "GodMode", false);
         AutoRehost = Config.Bind("Client Options", "AutoRehost", false);
+        UseVersionProtocol = Config.Bind("Client Options", "UseVersionProtocol", true);
+        FreezeMessageToSend = Config.Bind("Client Options", "FreezeMessageToSend", false);
+
+        UseVersionProtocol.Value = true;
 
         Logger = BepInEx.Logging.Logger.CreateLogSource("TOHE");
         coroutines = AddComponent<Coroutines>();
@@ -481,6 +487,17 @@ public class Main : BasePlugin
 
         // 認証関連-認証
         DebugModeManager.Auth(DebugKeyAuth, DebugKeyInput.Value);
+
+        if (FakeGitInfo == string.Empty)
+        {
+            FakeGitInfo = $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})";
+        }
+        if (FakePluginVersion == string.Empty)
+        {
+            FakePluginVersion = PluginVersion;
+        }
+
+        TOHE.Logger.Info($"Running FakeGitInfo: {FakeGitInfo} , FakePluginVersion {FakePluginVersion}", "FakeGitInfo");
 
         Preset1 = Config.Bind("Preset Name Options", "Preset1", "Preset_1");
         Preset2 = Config.Bind("Preset Name Options", "Preset2", "Preset_2");
