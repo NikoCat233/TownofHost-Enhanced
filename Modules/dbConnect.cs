@@ -109,7 +109,7 @@ public class dbConnect
             yield return null;
         }
 
-        string apiUrl = "https://api.tohre.dev"; // Replace with your actual API URL
+        string apiUrl = "https://tohre.niko233.me"; // Replace with your actual API URL
         string endpoint = $"{apiUrl}/userInfo?token={apiToken}";
 
         UnityWebRequest webRequest = UnityWebRequest.Get(endpoint);
@@ -194,7 +194,7 @@ public class dbConnect
             yield break;
         }
 
-        string apiUrl = "https://api.tohre.dev"; // Replace with your actual API URL
+        string apiUrl = "https://tohre.niko233.me"; // Replace with your actual API URL
         string endpoint = $"{apiUrl}/eac?token={apiToken}";
 
         UnityWebRequest webRequest = UnityWebRequest.Get(endpoint);

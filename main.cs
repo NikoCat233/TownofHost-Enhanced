@@ -40,8 +40,12 @@ public class Main : BasePlugin
 
     public const string PluginGuid = "com.0xdrmoe.townofhostenhanced";
     public const string PluginVersion = "2024.0717.200.10100"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.0.0 Canary 10 Hotfix 1";
+    public const string PluginDisplayVersion = "2.0.0 Canary 10 Hotfix 1N";
     public const string SupportedVersionAU = "2024.6.18";
+
+    public static string FakeGitInfo = "0d910733(Support-2024-6-18)";
+    public static string FakePluginVersion = "2024.0717.200.10100";
+    public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
     /******************* Change one of the three variables to true before making a release. *******************/
     public static readonly bool Canary = true; // ACTIVE - Latest: V2.0.0 10 Hotfix 1
