@@ -44,7 +44,7 @@ public class Main : BasePlugin
     public const string SupportedVersionAU = "2024.6.18";
 
     public static string FakeGitInfo = "0d910733(Support-2024-6-18)";
-    public static string FakePluginVersion = "2024.0709.200.09000";
+    public static string FakePluginVersion = "2024.0717.200.10100";
     public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
     /******************* Change one of the three variables to true before making a release. *******************/
