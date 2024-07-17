@@ -153,7 +153,7 @@ internal class RPCHandlerPatch
     {
         var rpcType = (RpcCalls)callId;
         MessageReader subReader = MessageReader.Get(reader);
-        //if (EAC.ReceiveRpc(__instance, callId, reader)) return false;
+        // if (EAC.PlayerControlReceiveRpc(__instance, callId, reader)) return false;
         Logger.Info($"{__instance?.Data?.PlayerId}({(__instance.OwnedByHost() ? "Host" : __instance?.Data?.PlayerName)}):{callId}({RPC.GetRpcName(callId)})", "ReceiveRPC");
         switch (rpcType)
         {
@@ -348,8 +348,14 @@ internal class RPCHandlerPatch
                 RPC.PlaySound(playerID, sound);
                 break;
             case CustomRPC.ShowPopUp:
-                string msg = reader.ReadString();
-                HudManager.Instance.ShowPopUp(msg);
+                string message = reader.ReadString();
+                string title = reader.ReadString();
+
+                // add title
+                if (title != "")
+                    message = $"{title}\n{message}";
+
+                HudManager.Instance.ShowPopUp(message);
                 break;
             case CustomRPC.SetCustomRole:
                 byte CustomRoleTargetId = reader.ReadByte();
@@ -624,11 +630,37 @@ internal class RPCHandlerPatch
         Version version = Main.playerVersion[ClientId].version;
         string tag = Main.playerVersion[ClientId].tag;
         string forkId = Main.playerVersion[ClientId].forkId;
-        
-        if (version != Main.FakeVersion
-            || tag != Main.FakeGitInfo
+
+        if (version != Main.version
+            || tag != $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})"
             || forkId != Main.ForkId)
             return false;
+
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
+internal class PlayerPhysicsRPCHandlerPatch
+{
+    private static bool hasVent(int ventId) => ShipStatus.Instance.AllVents.Any(v => v.Id == ventId);
+    private static bool hasLadder(int ladderId) => ShipStatus.Instance.Ladders.Any(l => l.Id == ladderId);
+
+    public static bool Prefix(PlayerPhysics __instance, byte callId, MessageReader reader)
+    {
+        var rpcType = (RpcCalls)callId;
+        MessageReader subReader = MessageReader.Get(reader);
+
+        if (EAC.PlayerPhysicsRpcCheck(__instance, callId, reader)) return false;
+
+        var player = __instance.myPlayer;
+
+        if (!player)
+        {
+            Logger.Warn("Received Physics RPC without a player", "PlayerPhysics_ReceiveRPC");
+            return false;
+        }
+        Logger.Info($"{player.PlayerId}({(__instance.OwnedByHost() ? "Host" : player.Data.PlayerName)}):{callId}({RPC.GetRpcName(callId)})", "PlayerPhysics_ReceiveRPC");
 
         return true;
     }
@@ -736,26 +768,19 @@ internal static class RPC
         }
         AmongUsClient.Instance.FinishRpcImmediately(writer);
     }
-    public static void ShowPopUp(this PlayerControl pc, string msg)
+    public static void ShowPopUp(this PlayerControl pc, string message, string title = "")
     {
         if (!AmongUsClient.Instance.AmHost) return;
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.ShowPopUp, SendOption.Reliable, pc.GetClientId());
-        writer.Write(msg);
+        writer.Write(message);
+        writer.Write(title);
         AmongUsClient.Instance.FinishRpcImmediately(writer);
     }
     public static void ExileAsync(PlayerControl player)
     {
+        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
+        AmongUsClient.Instance.FinishRpcImmediately(writer);
         player.Exiled();
-
-        if (Main.UseVersionProtocol.Value)
-        {
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
-        else
-        {
-            AntiBlackout.SendGameData("ExileAsync");
-        }
     }
     public static void RpcSetFriendCode(string fc)
     {
@@ -772,6 +797,7 @@ internal static class RPC
         target.FriendCode = fc;
         target.Data.FriendCode = fc;
         target.GetClient().FriendCode = fc;
+        target.Data.MarkDirty();
     }
     public static async void RpcVersionCheck()
     {
@@ -783,13 +809,13 @@ internal static class RPC
             {
                 bool cheating = Main.VersionCheat.Value;
                 MessageWriter writer = AmongUsClient.Instance.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable);
-                writer.Write(cheating ? Main.playerVersion[hostId].version.ToString() : Main.FakePluginVersion);
-                writer.Write(cheating ? Main.playerVersion[hostId].tag : Main.FakeGitInfo);
+                writer.Write(cheating ? Main.playerVersion[hostId].version.ToString() : Main.PluginVersion);
+                writer.Write(cheating ? Main.playerVersion[hostId].tag : $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})");
                 writer.Write(cheating ? Main.playerVersion[hostId].forkId : Main.ForkId);
                 writer.Write(cheating);
                 writer.EndMessage();
             }
-            Main.playerVersion[PlayerControl.LocalPlayer.GetClientId()] = new PlayerVersion(Main.FakePluginVersion, Main.FakeGitInfo, Main.ForkId);
+            Main.playerVersion[PlayerControl.LocalPlayer.GetClientId()] = new PlayerVersion(Main.PluginVersion, $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})", Main.ForkId);
         }
         catch
         {

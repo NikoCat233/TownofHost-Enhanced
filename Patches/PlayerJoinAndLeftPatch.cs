@@ -33,7 +33,6 @@ class OnGameJoinedPatch
         ChatUpdatePatch.DoBlockChat = false;
         GameStates.InGame = false;
         ErrorText.Instance.Clear();
-        Main.MessagesToSend.Clear();
         EAC.Init();
         Main.AllClientRealNames.Clear();
 
@@ -377,7 +376,7 @@ class OnPlayerLeftPatch
                 if (NameNotifyManager.Notifying(data.Character))
                 {
                     NameNotifyManager.Notice.Remove(data.Character.PlayerId);
-                    Utils.DoNotifyRoles(SpecifyTarget: data.Character, ForceLoop: true);
+                    //Utils.DoNotifyRoles(SpecifyTarget: data.Character, ForceLoop: true);
                 }
 
                 try
@@ -510,7 +509,12 @@ class OnPlayerLeftPatch
                 if (GameStates.IsMeeting)
                 {
                     Swapper.CheckSwapperTarget(data.Character.PlayerId);
-                    MeetingHud.Instance.CheckForEndVoting();
+
+                    // Prevent double check end voting
+                    if (MeetingHud.Instance.state == MeetingHud.VoteStates.Discussion)
+                    {
+                        MeetingHud.Instance.CheckForEndVoting();
+                    }
                 }
             }
         }
@@ -559,13 +563,10 @@ class InnerNetClientSpawnPatch
                         // Only for vanilla
                         if (!client.Character.OwnedByHost() && !client.Character.IsModClient())
                         {
-                            if (Main.UseVersionProtocol.Value)
-                            {
-                                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(LobbyBehaviour.Instance.NetId, (byte)RpcCalls.LobbyTimeExpiring, SendOption.None, client.Id);
-                                writer.WritePacked((int)GameStartManagerPatch.timer);
-                                writer.Write(false);
-                                AmongUsClient.Instance.FinishRpcImmediately(writer);
-                            }
+                            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(LobbyBehaviour.Instance.NetId, (byte)RpcCalls.LobbyTimeExpiring, SendOption.None, client.Id);
+                            writer.WritePacked((int)GameStartManagerPatch.timer);
+                            writer.Write(false);
+                            AmongUsClient.Instance.FinishRpcImmediately(writer);
                         }
                         // Non-host modded client
                         else if (!client.Character.OwnedByHost() && client.Character.IsModClient())

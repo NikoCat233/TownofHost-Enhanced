@@ -86,7 +86,7 @@ class CheckMurderPatch
 
         Logger.Info($"{killer.GetNameWithRole().RemoveHtmlTags()} => {target.GetNameWithRole().RemoveHtmlTags()}", "CheckMurder");
 
-        if (CheckForInvalidMurdering(killer, target) == false)
+        if (CheckForInvalidMurdering(killer, target, true) == false)
         {
             return false;
         }
@@ -133,7 +133,7 @@ class CheckMurderPatch
             Utils.NotifyRoles(SpecifySeer: target);
         }
     }
-    public static bool CheckForInvalidMurdering(PlayerControl killer, PlayerControl target)
+    public static bool CheckForInvalidMurdering(PlayerControl killer, PlayerControl target, bool checkCanUseKillButton = false)
     {
         // Killer is already dead
         if (!killer.IsAlive())
@@ -174,13 +174,13 @@ class CheckMurderPatch
         //↓ If not permitted
         if (TimeSinceLastKill.TryGetValue(killer.PlayerId, out var time) && time < minTime)
         {
-            Logger.Info("Kill intervals are too short and kills are canceled", "CheckMurder");
+            Logger.Info($"Last kill was too shortly before, canceled - time: {time}, minTime: {minTime}", "CheckMurder");
             return false;
         }
         TimeSinceLastKill[killer.PlayerId] = 0f;
 
         // killable decision
-        if (killer.PlayerId != target.PlayerId && !killer.CanUseKillButton())
+        if (killer.PlayerId != target.PlayerId && !killer.CanUseKillButton() && checkCanUseKillButton)
         {
             Logger.Info(killer.GetNameWithRole().RemoveHtmlTags() + " The hitter is not allowed to use the kill button and the kill is canceled", "CheckMurder");
             return false;
@@ -447,6 +447,8 @@ class MurderPlayerPatch
         if (Main.AllKillers.ContainsKey(killer.PlayerId))
             Main.AllKillers.Remove(killer.PlayerId);
 
+        killer.SetKillTimer();
+
         if (!killer.Is(CustomRoles.Trickster))
             Main.AllKillers.Add(killer.PlayerId, Utils.GetTimeStamp());
 
@@ -491,22 +493,10 @@ class RpcMurderPlayerPatch
         {
             __instance.MurderPlayer(target, murderResultFlags);
         }
-
-        if (Main.UseVersionProtocol.Value)
-        {
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
-            messageWriter.WriteNetObject(target);
-            messageWriter.Write((int)murderResultFlags);
-            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
-        }
-        else
-        {
-            var senderpc = PlayerControl.LocalPlayer;
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(senderpc.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
-            messageWriter.WriteNetObject(target);
-            messageWriter.Write((int)murderResultFlags);
-            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
-        }
+        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
+        messageWriter.WriteNetObject(target);
+        messageWriter.Write((int)murderResultFlags);
+        AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
 
         return false;
         // There is no need to include DecisionByHost. DecisionByHost will make client check protection locally and cause confusion.
@@ -1091,6 +1081,7 @@ class FixedUpdateInNormalGamePatch
             }
 
             DoubleTrigger.OnFixedUpdate(player);
+            KillTimerManager.FixedUpdate(player);
 
             //Mini's count down needs to be done outside if intask if we are counting meeting time
             if (GameStates.IsInGame && player.GetRoleClass() is Mini min)
@@ -1181,8 +1172,8 @@ class FixedUpdateInNormalGamePatch
                 {
                     if (Main.ForkId != ver.forkId) // フォークIDが違う場合
                         __instance.cosmetics.nameText.text = $"<color=#ff0000><size=1.2>{ver.forkId}</size>\n{__instance?.name}</color>";
-                    else if (Main.FakeVersion.CompareTo(ver.version) == 0)
-                        __instance.cosmetics.nameText.text = ver.tag == Main.FakeGitInfo ? $"<color=#87cefa>{__instance.name}</color>" : $"<color=#ffff00><size=1.2>{ver.tag}</size>\n{__instance?.name}</color>";
+                    else if (Main.version.CompareTo(ver.version) == 0)
+                        __instance.cosmetics.nameText.text = ver.tag == $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})" ? $"<color=#87cefa>{__instance.name}</color>" : $"<color=#ffff00><size=1.2>{ver.tag}</size>\n{__instance?.name}</color>";
                     else __instance.cosmetics.nameText.text = $"<color=#ff0000><size=1.2>v{ver.version}</size>\n{__instance?.name}</color>";
                 }
                 else __instance.cosmetics.nameText.text = __instance?.Data?.PlayerName;
@@ -1303,6 +1294,13 @@ class FixedUpdateInNormalGamePatch
                         RealName = GetString("DevouredName");
                 }
 
+                // Dollmaster, Prevent seeing self in mushroom cloud
+                if (CustomRoles.DollMaster.HasEnabled() && seerRole != CustomRoles.DollMaster)
+                {
+                    if (DollMaster.IsDoll(seer.PlayerId))
+                        RealName = "<size=10000%><color=#000000>■</color></size>";
+                }
+
                 // Camouflage
                 if ((Utils.IsActive(SystemTypes.Comms) && Camouflage.IsActive) || Camouflager.AbilityActivated)
                     RealName = $"<size=0%>{RealName}</size> ";
@@ -1414,6 +1412,11 @@ class CoEnterVentPatch
         if (Options.CurrentGameMode == CustomGameMode.FFA && FFAManager.CheckCoEnterVent(__instance, id))
         {
             return true;
+        }
+
+        if (KillTimerManager.AllKillTimers.TryGetValue(__instance.myPlayer.PlayerId, out var timer))
+        {
+            KillTimerManager.AllKillTimers[__instance.myPlayer.PlayerId] = timer + 0.5f;
         }
 
         // Check others enter to vent
@@ -1607,6 +1610,15 @@ class PlayerControlCheckNamePatch
             Logger.Warn($"Standard nickname: {playerName} => {name}", "Name Format");
             __instance.RpcSetName(name);
         }
+
+        _ = new LateTask(() =>
+        {
+            if (__instance != null && !__instance.Data.Disconnected && !__instance.IsModClient())
+            {
+                var sender = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.RequestRetryVersionCheck, SendOption.Reliable, __instance.OwnerId);
+                AmongUsClient.Instance.FinishRpcImmediately(sender);
+            }
+        }, 0.6f, "Retry Version Check", false);
     }
 }
 

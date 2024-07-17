@@ -300,6 +300,8 @@ public static class Options
     public static OptionItem DisableKillAnimationOnGuess;
     public static OptionItem DisableVanillaRoles;
     public static OptionItem DisableTaskWin;
+    public static OptionItem DisableTaskWinIfAllCrewsAreDead;
+    public static OptionItem DisableTaskWinIfAllCrewsAreConverted;
     public static OptionItem DisableMeeting;
     public static OptionItem DisableSabotage;
     public static OptionItem DisableCloseDoor;
@@ -598,10 +600,11 @@ public static class Options
         //#######################################
 
 
-
         // Start Load Settings
         if (IsLoaded) return;
         OptionSaver.Initialize();
+
+        yield return null;
 
         // Preset Option
         _ = PresetOptionItem.Create(0, TabGroup.SystemSettings)
@@ -1456,6 +1459,12 @@ public static class Options
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 153, 153, byte.MaxValue));
         DisableTaskWin = BooleanOptionItem.Create(60563, "DisableTaskWin", false, TabGroup.ModSettings, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetColor(new Color32(255, 153, 153, byte.MaxValue));
+        DisableTaskWinIfAllCrewsAreDead = BooleanOptionItem.Create(60900, "DisableTaskWinIfAllCrewsAreDead", false, TabGroup.ModSettings, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetColor(new Color32(255, 153, 153, byte.MaxValue));
+        DisableTaskWinIfAllCrewsAreConverted = BooleanOptionItem.Create(60901, "DisableTaskWinIfAllCrewsAreConverted", false, TabGroup.ModSettings, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 153, 153, byte.MaxValue));
         DisableMeeting = BooleanOptionItem.Create(60564, "DisableMeeting", false, TabGroup.ModSettings, false)

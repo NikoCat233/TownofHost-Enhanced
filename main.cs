@@ -39,11 +39,11 @@ public class Main : BasePlugin
     public static ConfigEntry<string> DebugKeyInput { get; private set; }
 
     public const string PluginGuid = "com.0xdrmoe.townofhostenhanced";
-    public const string PluginVersion = "2024.0709.200.09000"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.0.0 Canary 9N";
+    public const string PluginVersion = "2024.0716.200.10000"; // YEAR.MMDD.VERSION.CANARYDEV
+    public const string PluginDisplayVersion = "2.0.0 Canary 10";
     public const string SupportedVersionAU = "2024.6.18";
 
-    public static string FakeGitInfo = "d4917008(Support-2024-6-18)";
+    public static string FakeGitInfo = "a1d5ff7d(Support-2024-6-18)";
     public static string FakePluginVersion = "2024.0709.200.09000";
     public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
@@ -105,8 +105,6 @@ public class Main : BasePlugin
     public static bool IsHostVersionCheating = false;
     public static ConfigEntry<bool> GodMode { get; private set; }
     public static ConfigEntry<bool> AutoRehost { get; private set; }
-    public static ConfigEntry<bool> UseVersionProtocol { get; private set; }
-    public static ConfigEntry<bool> FreezeMessageToSend { get; private set; }
 
     public static Dictionary<int, PlayerVersion> playerVersion = [];
     //Preset Name Options
@@ -447,10 +445,6 @@ public class Main : BasePlugin
         VersionCheat = Config.Bind("Client Options", "VersionCheat", false);
         GodMode = Config.Bind("Client Options", "GodMode", false);
         AutoRehost = Config.Bind("Client Options", "AutoRehost", false);
-        UseVersionProtocol = Config.Bind("Client Options", "UseVersionProtocol", true);
-        FreezeMessageToSend = Config.Bind("Client Options", "FreezeMessageToSend", false);
-
-        UseVersionProtocol.Value = true;
 
         Logger = BepInEx.Logging.Logger.CreateLogSource("TOHE");
         coroutines = AddComponent<Coroutines>();
@@ -487,17 +481,6 @@ public class Main : BasePlugin
 
         // 認証関連-認証
         DebugModeManager.Auth(DebugKeyAuth, DebugKeyInput.Value);
-
-        if (FakeGitInfo == string.Empty)
-        {
-            FakeGitInfo = $"{ThisAssembly.Git.Commit}({ThisAssembly.Git.Branch})";
-        }
-        if (FakePluginVersion == string.Empty)
-        {
-            FakePluginVersion = PluginVersion;
-        }
-
-        TOHE.Logger.Info($"Running FakeGitInfo: {FakeGitInfo} , FakePluginVersion {FakePluginVersion}", "FakeGitInfo");
 
         Preset1 = Config.Bind("Preset Name Options", "Preset1", "Preset_1");
         Preset2 = Config.Bind("Preset Name Options", "Preset2", "Preset_2");
