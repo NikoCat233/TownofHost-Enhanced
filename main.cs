@@ -43,7 +43,7 @@ public class Main : BasePlugin
     public const string PluginDisplayVersion = "2.0.0 Canary 11 Hotfix 1N";
     public const string SupportedVersionAU = "2024.6.18";
 
-    public static string FakeGitInfo = "97213836(main)";
+    public static string FakeGitInfo = "9721383(main)";
     public static string FakePluginVersion = "2024.0721.200.11100";
     public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
