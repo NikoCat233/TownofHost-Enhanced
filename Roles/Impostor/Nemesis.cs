@@ -7,7 +7,6 @@ using UnityEngine;
 using static TOHE.Options;
 using static TOHE.Translator;
 using static TOHE.MeetingHudStartPatch;
-using System.Runtime.Intrinsics.Arm;
 
 namespace TOHE.Roles.Impostor;
 
@@ -137,6 +136,11 @@ internal class Nemesis : RoleBase
         else if (target.Is(CustomRoles.Solsticer))
         {
             pc.ShowInfoMessage(isUI, GetString("GuessSolsticer"));
+            return true;
+        }
+        else if (target.Is(CustomRoles.Jinx) || target.Is(CustomRoles.CursedWolf))
+        {
+            pc.ShowInfoMessage(isUI, GetString("GuessImmune"));
             return true;
         }
         else if (pc.RpcCheckAndMurder(target, true) == false)

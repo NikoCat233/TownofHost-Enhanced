@@ -86,6 +86,11 @@ class GameEndCheckerForNormal
                         if ((pc.Is(Custom_Team.Crewmate) && (countType == CountTypes.Crew || pc.Is(CustomRoles.Soulless))) ||
                             pc.Is(CustomRoles.Admired) && !WinnerIds.Contains(pc.PlayerId))
                         {
+                            // When admired neutral win, set end game reason "HumansByVote"
+                            if (reason is not GameOverReason.HumansByVote and not GameOverReason.HumansByTask)
+                            {
+                                reason = GameOverReason.HumansByVote;
+                            }
                             WinnerIds.Add(pc.PlayerId);
                         }
                         break;
@@ -275,7 +280,7 @@ class GameEndCheckerForNormal
                             break;
                         case CustomRoles.Pursuer when pc.IsAlive() && WinnerTeam is not CustomWinner.Jester and not CustomWinner.Lovers and not CustomWinner.Terrorist and not CustomWinner.Executioner and not CustomWinner.Collector and not CustomWinner.Innocent and not CustomWinner.Youtuber:
                             WinnerIds.Add(pc.PlayerId);
-                            AdditionalWinnerTeams.Add(AdditionalWinners.Taskinator);
+                            AdditionalWinnerTeams.Add(AdditionalWinners.Pursuer);
                             break;
                         case CustomRoles.Sunnyboy when !pc.IsAlive():
                             WinnerIds.Add(pc.PlayerId);
