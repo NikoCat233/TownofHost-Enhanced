@@ -40,7 +40,7 @@ public class Main : BasePlugin
 
     public const string PluginGuid = "com.0xdrmoe.townofhostenhanced";
     public const string PluginVersion = "2024.0804.202.9999"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.0.2";
+    public const string PluginDisplayVersion = "2.0.2N";
     public const string SupportedVersionAU = "2024.6.18";
 
     public static string FakeGitInfo = "5a28a2fa(main)";
