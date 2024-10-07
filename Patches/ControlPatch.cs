@@ -1,4 +1,3 @@
-using Hazel;
 using System;
 using System.Text;
 using TOHE.Modules;
@@ -175,11 +174,6 @@ internal class ControllerManagerUpdatePatch
             {
                 Utils.CopyCurrentSettings();
             }
-            //Open the game directory
-            if (GetKeysDown(KeyCode.F10))
-            {
-                System.Diagnostics.Process.Start(Environment.CurrentDirectory);
-            }
 
             // Show chat
             if (GetKeysDown(KeyCode.Return, KeyCode.C, KeyCode.LeftShift))
@@ -210,13 +204,20 @@ internal class ControllerManagerUpdatePatch
                 Utils.DoNotifyRoles(ForceLoop: true);
                 CustomWinnerHolder.ResetAndSetWinner(CustomWinner.Draw);
                 GameManager.Instance.LogicFlow.CheckEndCriteria();
+                GameEndCheckerForNormal.GameIsEnded = true;
                 if (GameStates.IsHideNSeek)
                 {
                     GameEndCheckerForNormal.StartEndGame(GameOverReason.ImpostorDisconnect);
                 }
             }
 
-            // Forse start/end meeting
+            //Search Bar In Menu "Press Enter" alternative function
+            if (GetKeysDown(KeyCode.Return) && GameSettingMenuPatch.Instance != null && GameSettingMenuPatch.Instance.isActiveAndEnabled == true)
+            {
+                GameSettingMenuPatch._SearchForOptions?.Invoke();
+            }
+
+            // Force start/end meeting
             if (GetKeysDown(KeyCode.Return, KeyCode.M, KeyCode.LeftShift) && GameStates.IsInGame)
             {
                 if (GameStates.IsHideNSeek) return;
@@ -257,7 +258,7 @@ internal class ControllerManagerUpdatePatch
             }
 
             // Cancel start count down
-            if (Input.GetKeyDown(KeyCode.C) && GameStates.IsCountDown)
+            if (Input.GetKeyDown(KeyCode.C) && GameStates.IsCountDown && GameStates.IsLobby)
             {
                 Logger.Info("Reset Countdown", "KeyCommand");
                 GameStartManager.Instance.ResetStartState();
@@ -395,17 +396,6 @@ internal class ControllerManagerUpdatePatch
                     }
                 }
             }
-
-            /*if (Input.GetKeyDown(KeyCode.L))
-              {
-                  Logger.Info($"{Utils.IsActive(SystemTypes.Reactor)}", "Check SystemType.Reactor");
-                  Logger.Info($"{Utils.IsActive(SystemTypes.LifeSupp)}", "Check SystemTypes.LifeSupp");
-                  Logger.Info($"{Utils.IsActive(SystemTypes.Laboratory)}", "Check SystemTypes.Laboratory");
-                  Logger.Info($"{Utils.IsActive(SystemTypes.HeliSabotage)}", "Check SystemTypes.HeliSabotage");
-                  Logger.Info($"{Utils.IsActive(SystemTypes.Comms)}", "Check SystemTypes.Comms");
-                  Logger.Info($"{Utils.IsActive(SystemTypes.Electrical)}", "Check SystemTypes.Electrical");
-                  Logger.Info($"{Utils.IsActive(SystemTypes.MushroomMixupSabotage)}", "Check SystemTypes.MushroomMixupSabotage");
-              }*/
 
             // Clear vent
             if (Input.GetKeyDown(KeyCode.N))

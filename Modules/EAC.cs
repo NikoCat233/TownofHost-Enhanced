@@ -1,7 +1,6 @@
 ﻿using Hazel;
 using System;
 using InnerNet;
-using TOHE.Modules;
 using static TOHE.Translator;
 
 namespace TOHE;
@@ -35,7 +34,7 @@ internal class EAC
         // nvm, it works so im not doing more changes
 
         if (!AmongUsClient.Instance.AmHost) return false;
-        if (RoleBasisChanger.IsChangeInProgress) return false;
+        //if (RoleBasisChanger.IsChangeInProgress) return false;
         if (pc == null || reader == null) return false;
         try
         {
@@ -659,7 +658,7 @@ internal class EAC
                 break;
             case 3:
                 foreach (var apc in Main.AllPlayerControls.Where(x => x.PlayerId != pc?.Data?.PlayerId).ToArray())
-                    Utils.SendMessage(string.Format(GetString("Message.NoticeByEAC"), pc?.Data?.PlayerName, text), pc.PlayerId, Utils.ColorString(Utils.GetRoleColor(CustomRoles.Impostor), GetString("MessageFromEAC")));
+                    Utils.SendMessage(string.Format(GetString("Message.NoticeByEAC"), pc?.Data?.PlayerName, text), apc.PlayerId, Utils.ColorString(Utils.GetRoleColor(CustomRoles.Impostor), GetString("MessageFromEAC")));
                 break;
             case 4:
                 if (!BanManager.TempBanWhiteList.Contains(pc.GetClient().GetHashedPuid()))

@@ -133,9 +133,9 @@ internal class Retributionist : RoleBase
             pc.ShowInfoMessage(isUI, GetString("RetributionistKillDead"));
             return true;
         }
-        else if (target.Is(CustomRoles.Pestilence))
+        else if (target.IsTransformedNeutralApocalypse())
         {
-            pc.ShowInfoMessage(isUI, GetString("PestilenceImmune"));
+            pc.ShowInfoMessage(isUI, GetString("ApocalypseImmune"));
             return true;
         }
         else if (target.Is(CustomRoles.NiceMini) && Mini.Age < 18)
@@ -156,6 +156,7 @@ internal class Retributionist : RoleBase
         else if (pc.RpcCheckAndMurder(target, true) == false)
         {
             pc.ShowInfoMessage(isUI, GetString("GuessImmune"));
+            Logger.Info($"Guess Immune target {target.PlayerId} have role {target.GetCustomRole()}", "Retributionist");
             return true;
         }
 

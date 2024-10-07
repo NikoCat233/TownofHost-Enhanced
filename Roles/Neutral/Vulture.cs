@@ -25,8 +25,7 @@ internal class Vulture : RoleBase
     private static OptionItem VultureReportCD;
     private static OptionItem MaxEaten;
     private static OptionItem HasImpVision;
-
-    private static readonly HashSet<byte> UnreportablePlayers = [];
+    
     private static readonly Dictionary<byte, int> BodyReportCount = [];
     private static readonly Dictionary<byte, int> AbilityLeftInRound = [];
     private static readonly Dictionary<byte, long> LastReport = [];
@@ -45,7 +44,6 @@ internal class Vulture : RoleBase
     public override void Init()
     {
         playerIdList.Clear();
-        UnreportablePlayers.Clear();
         BodyReportCount.Clear();
         AbilityLeftInRound.Clear();
         LastReport.Clear();
@@ -80,34 +78,12 @@ internal class Vulture : RoleBase
         AURoleOptions.EngineerInVentMaxTime = 0f;
     }
 
-    private static void SendRPC(byte playerId, bool add, Vector3 loc = new())
-    {
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetVultureArrow, SendOption.Reliable, -1);
-        writer.Write(playerId);
-        writer.Write(add);
-        if (add)
-        {
-            writer.Write(loc.x);
-            writer.Write(loc.y);
-            writer.Write(loc.z);
-        }
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
-    }
     private static void SendBodyRPC(byte playerId)
     {
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SyncVultureBodyAmount, SendOption.Reliable, -1);
         writer.Write(playerId);
         writer.Write(BodyReportCount[playerId]);
         AmongUsClient.Instance.FinishRpcImmediately(writer);
-    }
-    public static void ReceiveRPC(MessageReader reader)
-    {
-        byte playerId = reader.ReadByte();
-        bool add = reader.ReadBoolean();
-        if (add)
-            LocateArrow.Add(playerId, new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
-        else
-            LocateArrow.RemoveAllTarget(playerId);
     }
     public static void ReceiveBodyRPC(MessageReader reader)
     {
@@ -121,9 +97,9 @@ internal class Vulture : RoleBase
         else
             BodyReportCount[playerId] = body;
     }
-    public override void OnFixedUpdateLowLoad(PlayerControl player)
+    public override void OnFixedUpdate(PlayerControl player, bool lowLoad, long nowTime)
     {
-        if (!player.IsAlive()) return;
+        if (lowLoad || !player.IsAlive()) return;
 
         if (BodyReportCount[player.PlayerId] >= NumberOfReportsToWin.GetInt())
         {
@@ -137,8 +113,7 @@ internal class Vulture : RoleBase
     }
     public override bool OnCheckReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo deadBody, PlayerControl killer)
     {
-        // Vulture was eat body
-        if (UnreportablePlayers.Contains(deadBody.PlayerId)) return false;
+        if (Main.UnreportableBodies.Contains(deadBody.PlayerId)) return false;
 
         if (reporter.Is(CustomRoles.Vulture))
         {
@@ -175,7 +150,6 @@ internal class Vulture : RoleBase
         foreach (var apc in playerIdList)
         {
             LocateArrow.RemoveAllTarget(apc);
-            SendRPC(apc, false);
         }
     }
     private static void OnEatDeadBody(PlayerControl pc, NetworkedPlayerInfo target)
@@ -188,13 +162,12 @@ internal class Vulture : RoleBase
             foreach (var apc in playerIdList)
             {
                 LocateArrow.Remove(apc, target.Object.transform.position);
-                SendRPC(apc, false);
             }
         }
         SendBodyRPC(pc.PlayerId);
         pc.Notify(GetString("VultureBodyReported"));
-        UnreportablePlayers.Remove(target.PlayerId);
-        UnreportablePlayers.Add(target.PlayerId);
+        Main.UnreportableBodies.Remove(target.PlayerId);
+        Main.UnreportableBodies.Add(target.PlayerId);
     }
     public override void AfterMeetingTasks()
     {
@@ -207,7 +180,6 @@ internal class Vulture : RoleBase
             {
                 AbilityLeftInRound[apc] = MaxEaten.GetInt();
                 LastReport[apc] = GetTimeStamp();
-                SendRPC(apc, false);
             }
             SendBodyRPC(player.PlayerId);
         }
@@ -242,7 +214,7 @@ internal class Vulture : RoleBase
         foreach (var pc in Main.AllAlivePlayerControls)
         {
             if (pc.PlayerId == target.PlayerId) continue;
-            var dis = Vector2.Distance(pc.transform.position, pos);
+            var dis = GetDistance(pc.transform.position, pos);
             if (dis < minDis && dis < 1.5f)
             {
                 minDis = dis;
@@ -254,7 +226,6 @@ internal class Vulture : RoleBase
             var player = GetPlayerById(pc);
             if (player == null || !player.IsAlive()) continue;
             LocateArrow.Add(pc, target.transform.position);
-            SendRPC(pc, true, target.transform.position);
         }
     }
     public override string GetSuffix(PlayerControl seer, PlayerControl target = null, bool isForMeeting = false)

@@ -2,7 +2,7 @@
 
 public static class OutfitManager
 {
-    public static void ResetPlayerOutfit(this PlayerControl player, NetworkedPlayerInfo.PlayerOutfit Outfit = null, bool force = false)
+    public static void ResetPlayerOutfit(this PlayerControl player, NetworkedPlayerInfo.PlayerOutfit Outfit = null, uint newLevel = 500, bool force = false)
     {
         Outfit ??= Main.PlayerStates[player.PlayerId].NormalOutfit;
 
@@ -17,6 +17,7 @@ public static class OutfitManager
             .EndRpc();
 
             Main.AllPlayerNames[player.PlayerId] = Outfit.PlayerName;
+            RPC.SyncAllPlayerNames();
 
             player.SetColor(Outfit.ColorId);
             sender.AutoStartRpc(player.NetId, (byte)RpcCalls.SetColor)
@@ -53,6 +54,14 @@ public static class OutfitManager
                 .Write(Outfit.NamePlateId)
                 .Write(player.GetNextRpcSequenceId(RpcCalls.SetNamePlateStr))
                 .EndRpc();
+
+            if (newLevel != 500)
+            {
+                player.SetLevel(newLevel);
+                sender.AutoStartRpc(player.NetId, (byte)RpcCalls.SetLevel)
+                    .WritePacked(newLevel)
+                    .EndRpc();
+            }
 
             sender.SendMessage();
 
@@ -92,6 +101,8 @@ public static class OutfitManager
             .EndRpc();
 
             Main.AllPlayerNames[player.PlayerId] = newOutfit.PlayerName;
+
+            RPC.SyncAllPlayerNames();
         }
 
         player.SetColor(newOutfit.ColorId);

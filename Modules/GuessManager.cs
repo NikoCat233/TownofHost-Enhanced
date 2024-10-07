@@ -145,7 +145,11 @@ public static class GuessManager
             pc.ShowInfoMessage(isUI, GetString("GuessNotAllowed"));
             return true;
         }
-
+        if (pc.GetCustomRole().IsNA() && !Options.NeutralApocalypseCanGuess.GetBool() && !pc.Is(CustomRoles.Guesser))
+        {
+            pc.ShowInfoMessage(isUI, GetString("GuessNotAllowed"));
+            return true;
+        }
 
         if (operate == 1)
         {
@@ -214,7 +218,7 @@ public static class GuessManager
                     pc.ShowInfoMessage(isUI, GetString("GuessedAsMundane"));
                     return true;
                 }
-                if (Medic.ProtectList.Contains(target.PlayerId) && !Medic.GuesserIgnoreShield.GetBool())
+                if (Medic.IsProtected(target.PlayerId) && !Medic.GuesserIgnoreShield.GetBool())
                 {
                     pc.ShowInfoMessage(isUI, GetString("GuessShielded"));
                     return true;
@@ -230,7 +234,7 @@ public static class GuessManager
                     pc.ShowInfoMessage(isUI, GetString("GuessRainbow"));
                     return true;
                 }
-                if (role is CustomRoles.LastImpostor or CustomRoles.Mare or CustomRoles.Cyber or CustomRoles.Flash or CustomRoles.Glow)
+                if (role is CustomRoles.LastImpostor or CustomRoles.Mare or CustomRoles.Cyber or CustomRoles.Flash or CustomRoles.Glow or CustomRoles.Sloth)
                 {
                     pc.ShowInfoMessage(isUI, GetString("GuessObviousAddon"));
                     return true;
@@ -374,7 +378,7 @@ public static class GuessManager
 
     public static TextMeshPro NameText(this PlayerControl p) => p.cosmetics.nameText;
     public static TextMeshPro NameText(this PoolablePlayer p) => p.cosmetics.nameText;
-    public static void RpcGuesserMurderPlayer(this PlayerControl pc) //ゲッサー用の殺し方
+    public static void RpcGuesserMurderPlayer(this PlayerControl pc)
     {
         try
         {
@@ -577,6 +581,8 @@ public static class GuessManager
 
                 if (PlayerControl.LocalPlayer.IsAlive() && PlayerControl.LocalPlayer.GetCustomRole().IsNK() && Options.NeutralKillersCanGuess.GetBool())
                     CreateGuesserButton(__instance);
+                if (PlayerControl.LocalPlayer.IsAlive() && PlayerControl.LocalPlayer.GetCustomRole().IsNA() && Options.NeutralApocalypseCanGuess.GetBool())
+                    CreateGuesserButton(__instance);
                 if (PlayerControl.LocalPlayer.IsAlive() && PlayerControl.LocalPlayer.GetCustomRole().IsNonNK() && Options.PassiveNeutralsCanGuess.GetBool())
                     CreateGuesserButton(__instance);
                 else if (PlayerControl.LocalPlayer.GetCustomRole() is CustomRoles.Doomsayer && !Options.PassiveNeutralsCanGuess.GetBool() && !Doomsayer.CheckCantGuess)
@@ -603,7 +609,6 @@ public static class GuessManager
     }
     public static void CreateGuesserButton(MeetingHud __instance)
     {
-
         foreach (var pva in __instance.playerStates.ToArray())
         {
             var pc = Utils.GetPlayerById(pva.TargetPlayerId);
@@ -675,6 +680,7 @@ public static class GuessManager
             var smallButtonTemplate = __instance.playerStates[0].Buttons.transform.Find("CancelButton");
             textTemplate.enabled = true;
             if (textTemplate.transform.FindChild("RoleTextMeeting") != null) UnityEngine.Object.Destroy(textTemplate.transform.FindChild("RoleTextMeeting").gameObject);
+            if (textTemplate.transform.FindChild("DeathReasonTextMeeting") != null) UnityEngine.Object.Destroy(textTemplate.transform.FindChild("DeathReasonTextMeeting").gameObject);
 
             Transform exitButtonParent = new GameObject().transform;
             exitButtonParent.SetParent(container);
@@ -892,6 +898,30 @@ public static class GuessManager
                         listOfRoles.Add(CustomRoles.Admired);
                 }
 
+                if (CustomRoles.PlagueBearer.IsEnable())
+                {
+                    if (!listOfRoles.Contains(CustomRoles.Pestilence))
+                        listOfRoles.Add(CustomRoles.Pestilence);
+                }
+
+                if (CustomRoles.SoulCollector.IsEnable())
+                {
+                    if (!listOfRoles.Contains(CustomRoles.Death))
+                        listOfRoles.Add(CustomRoles.Death);
+                }
+
+                if (CustomRoles.Baker.IsEnable())
+                {
+                    if (!listOfRoles.Contains(CustomRoles.Famine))
+                        listOfRoles.Add(CustomRoles.Famine);
+                }
+
+                if (CustomRoles.Berserker.IsEnable())
+                {
+                    if (!listOfRoles.Contains(CustomRoles.War))
+                        listOfRoles.Add(CustomRoles.War);
+                }
+
                 arrayOfRoles = [.. listOfRoles];
             }
             else
@@ -924,7 +954,9 @@ public static class GuessManager
                     or CustomRoles.LastImpostor
                     or CustomRoles.Mare
                     or CustomRoles.Cyber
-                    ) continue;
+                    or CustomRoles.Sloth
+                    or CustomRoles.Apocalypse
+                    || (role.IsTNA() && !Options.TransformedNeutralApocalypseCanBeGuessed.GetBool())) continue;
 
                 CreateRole(role);
             }
@@ -1016,7 +1048,6 @@ public static class GuessManager
             {
                 return;
             }
-
             UnityEngine.Object.Destroy(textTemplate.gameObject);
         }
     }
