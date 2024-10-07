@@ -1,5 +1,4 @@
-﻿
-namespace TOHE.Modules;
+﻿namespace TOHE.Modules;
 
 public class BAUPlayersData
 {
@@ -76,4 +75,3 @@ public class BAUPlayersData
         }
     }
 }
-
