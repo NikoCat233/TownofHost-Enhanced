@@ -65,7 +65,7 @@ public class InnerNetClientPatch
 
             foreach (var player in batch)
             {
-                if (messageWriter.Length > 1600) break;
+                if (messageWriter.Length > 600) break;
                 if (player != null && player.ClientId != clientId && !player.Disconnected)
                 {
                     __instance.WriteSpawnMessage(player, player.OwnerId, player.SpawnFlags, messageWriter);
@@ -190,8 +190,6 @@ public class InnerNetClientPatch
         return;
     }
 
-
-    private static byte timer = 0;
     [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.FixedUpdate))]
     [HarmonyPostfix]
     public static void FixedUpdatePostfix(InnerNetClient __instance)
@@ -200,16 +198,9 @@ public class InnerNetClientPatch
         if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return;
         if (!__instance.AmHost || __instance.Streams == null) return;
 
-        if (timer == 0)
-        {
-            timer = 1;
-            return;
-        }
-
         var player = GameData.Instance.AllPlayers.ToArray().FirstOrDefault(x => x.IsDirty);
         if (player != null)
         {
-            timer = 0;
             MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
             messageWriter.StartMessage(5);
             messageWriter.Write(__instance.GameId);
