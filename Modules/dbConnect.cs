@@ -158,7 +158,7 @@ public class dbConnect
         }
 
         string apiUrl = ApiUrl;
-        string endpoint = $"{apiUrl}/userInfo?token={apiToken}";
+        string endpoint = $"{apiUrl}/userInfo?token={apiToken}&version={Main.version}";
 
         UnityWebRequest webRequest = UnityWebRequest.Get(endpoint);
 
@@ -243,7 +243,7 @@ public class dbConnect
         }
 
         string apiUrl = ApiUrl;
-        string endpoint = $"{apiUrl}/eac?token={apiToken}";
+        string endpoint = $"{apiUrl}/eac?token={apiToken}&version={Main.version}";
 
         UnityWebRequest webRequest = UnityWebRequest.Get(endpoint);
 
