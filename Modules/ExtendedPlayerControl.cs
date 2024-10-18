@@ -82,9 +82,9 @@ static class ExtendedPlayerControl
 
         if (player.HasGhostRole())
         {
-            player.GetRoleClass().Remove(player.PlayerId);
+            player.GetRoleClass().OnRemove(player.PlayerId);
             player.RpcSetCustomRole(player.GetRoleMap().CustomRole);
-            player.GetRoleClass().Add(player.PlayerId);
+            player.GetRoleClass().OnAdd(player.PlayerId);
         }
 
         if (Camouflage.IsCamouflage)
@@ -265,6 +265,7 @@ static class ExtendedPlayerControl
             player.SetPet(petId);
             return;
         }
+        player.Data.DefaultOutfit.PetSequenceId += 10;
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetPetStr, SendOption.Reliable, clientId);
         writer.Write(petId);
         writer.Write(player.GetNextRpcSequenceId(RpcCalls.SetPetStr));
@@ -635,14 +636,20 @@ static class ExtendedPlayerControl
     }
     public static void RpcSetSpecificScanner(this PlayerControl target, PlayerControl seer, bool IsActive)
     {
-        if (!AmongUsClient.Instance.AmHost) return;
-
-        byte cnt = ++PlayerControl.LocalPlayer.scannerCount;
-
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.SetScanner, SendOption.Reliable, seer.GetClientId());
+        var seerClientId = seer.GetClientId();
+        if (seerClientId == -1) return;
+        byte cnt = ++target.scannerCount;
+        if (AmongUsClient.Instance.ClientId == seerClientId)
+        {
+            target.SetScanner(IsActive, cnt);
+            return;
+        }
+        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.SetScanner, SendOption.Reliable, seerClientId);
         messageWriter.Write(IsActive);
         messageWriter.Write(cnt);
         AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+
+        target.scannerCount = cnt;
     }
     public static void RpcCheckVanishDesync(this PlayerControl player, PlayerControl seer)
     {
@@ -769,13 +776,15 @@ static class ExtendedPlayerControl
         if (player == null) return;
         var netTransform = player.NetTransform;
         var clientId = seer.GetClientId();
-        ushort addSid = GameStates.IsLocalGame ? (ushort)4 : (ushort)40;
         if (AmongUsClient.Instance.ClientId == clientId)
         {
-            netTransform.SnapTo(position, (ushort)(netTransform.lastSequenceId + addSid));
+            netTransform.SnapTo(position, (ushort)(6 + netTransform.lastSequenceId));
             return;
         }
-        ushort newSid = (ushort)(netTransform.lastSequenceId + addSid);
+        netTransform.lastSequenceId += 326;
+        netTransform.SetDirtyBit(uint.MaxValue);
+
+        ushort newSid = (ushort)(8 + netTransform.lastSequenceId);
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(netTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable, clientId);
         NetHelpers.WriteVector2(position, writer);
         writer.Write(newSid);
@@ -819,11 +828,12 @@ static class ExtendedPlayerControl
 
         var netTransform = player.NetTransform;
 
-        if (AmongUsClient.Instance.AmClient)
+        if (AmongUsClient.Instance.AmHost)
         {
             // +328 because lastSequenceId has delay between the host and the vanilla client
             // And this cannot forced teleport the player
             netTransform.SnapTo(position, (ushort)(netTransform.lastSequenceId + 328));
+            netTransform.SetDirtyBit(uint.MaxValue);
         }
 
         ushort newSid = (ushort)(netTransform.lastSequenceId + 8);
@@ -1198,7 +1208,7 @@ static class ExtendedPlayerControl
     public static bool IsHost(this InnerNetObject innerObject) => innerObject.OwnerId == AmongUsClient.Instance.HostId;
     public static bool IsHost(this byte playerId) => playerId.GetPlayer()?.OwnerId == AmongUsClient.Instance.HostId;
     public static bool IsModded(this PlayerControl player) => player != null && (player.AmOwner || player.IsHost() || Main.playerVersion.ContainsKey(player.GetClientId()));
-    public static bool IsNonHostModdedClient(this PlayerControl pc) => !pc.IsHost() && Main.playerVersion.ContainsKey(pc.GetClientId());
+    public static bool IsNonHostModdedClient(this PlayerControl pc) => pc != null && !pc.IsHost() && Main.playerVersion.ContainsKey(pc.GetClientId());
     ///<summary>
     ///プレイヤーのRoleBehaviourのGetPlayersInAbilityRangeSortedを実行し、戻り値を返します。
     ///</summary>
