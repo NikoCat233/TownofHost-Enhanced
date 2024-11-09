@@ -46,8 +46,8 @@ public class Main : BasePlugin
     public const string PluginDisplayVersion = "2.1.1";
     public const string SupportedVersionAU = "2024.8.13"; // Also 2024.9.4 and 2024.10.29
 
-    public static string FakeGitInfo = "7a379967(DevBuild_2.1.0)";
-    public static string FakePluginVersion = "2024.1011.210.030000";
+    public static string FakeGitInfo = "3676f644(main)";
+    public static string FakePluginVersion = "2024.1103.211.9999";
     public static Version FakeVersion => Version.Parse(FakePluginVersion);
 
     /******************* Change one of the three variables to true before making a release. *******************/
