@@ -30,7 +30,7 @@
 <br>
 
 **Credit to these mods and their developers for the code and help:**
-### :star: [TOHRE](https://github.com/Loonie-Toons/ ) 
+### :star: [TOHRE](https://github.com/Loonie-Toons/) 
 > 
 > - Town of Host: Enhanced was forked from Town of Host: Re-Edited.
 >
