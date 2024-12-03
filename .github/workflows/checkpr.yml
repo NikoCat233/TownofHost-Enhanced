@@ -1,5 +1,5 @@
 name: Build the mod on pull request
-run-name: Build PR \# ${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }} (Latest Commit: ${{ github.sha.substring(0, 8) }})
+run-name: Build PR#${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}
 
 on:
   pull_request:
